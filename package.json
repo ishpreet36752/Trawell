@@ -1,0 +1,17 @@
+c{
+    "name": "trawell-monorepo",
+    "private": true,
+    "workspaces": [
+        "apps/*",
+        "packages/*"
+    ],
+    "scripts": {
+        "dev:web": "npm run dev --workspace=trawell-web",
+        "dev:backend": "npm run dev --workspace=trawell-backend",
+        "dev": "concurrently \"npm run dev:web\" \"npm run dev:backend\"",
+        "dev:fast": "concurrently --names \"web,backend\" --prefix-colors \"blue,green\" \"npm run dev:web\" \"npm run dev:backend\""
+    },
+    "devDependencies": {
+        "concurrently": "^9.2.1"
+    }
+}
