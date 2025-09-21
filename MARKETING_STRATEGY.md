@@ -259,7 +259,7 @@ This document outlines a comprehensive marketing and attraction strategy for Tra
 3. **Industry Insights** - Travel tech trends and analysis
 4. **Project Updates** - Development progress and milestones
 
-#### **Content Calendar**
+#### **Blog Content Calendar**
 - **Weekly**: Technical tutorial or community story
 - **Bi-weekly**: Industry insight or project update
 - **Monthly**: Comprehensive project report

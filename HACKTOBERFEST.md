@@ -288,7 +288,7 @@ Before submitting your PR, make sure you've:
 > **- Sarah, Frontend Contributor**
 
 > *"The mentorship program at Trawell helped me understand complex backend concepts. Now I'm confident contributing to other open source projects too!"*
-> 
+>
 > **- Alex, Backend Contributor**
 
 ---

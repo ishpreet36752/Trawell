@@ -146,7 +146,7 @@ This document contains a comprehensive list of issues perfect for Hacktoberfest 
 - **Files to modify**: `apps/web/src/components/`
 - **Skills needed**: React, Performance optimization
 
-### 🔧 **Backend Issues**
+### 🔧 **Backend Issues (Intermediate)**
 
 #### 15. **🤖 AI Itinerary API Integration**
 - **Difficulty**: Intermediate

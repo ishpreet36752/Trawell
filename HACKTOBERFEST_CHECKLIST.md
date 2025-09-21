@@ -38,9 +38,9 @@
 
 #### **Repository Topics**
 Add these topics to your repository:
-```
+```plaintext
 hacktoberfest
-hacktoberfest2024
+hacktoberfest2025
 travel
 react
 nodejs
@@ -53,8 +53,8 @@ good-first-issue
 
 #### **Repository Description**
 Update your repository description to:
-```
-🌍 Trawell - Travel companion matching platform. Find your perfect travel buddy! Built with React, Node.js, and MongoDB. Perfect for Hacktoberfest 2024! #hacktoberfest
+```plaintext
+🌍 Trawell - Travel companion matching platform. Find your perfect travel buddy! Built with React, Node.js, and MongoDB. Perfect for Hacktoberfest 2025! #hacktoberfest
 ```
 
 #### **Repository Website**

@@ -24,7 +24,7 @@ A comprehensive Node.js backend API for the Trawell travel application, built wi
 
 ## 📁 Project Structure
 
-```
+```plaintext
 src/
 ├── app.js              # Main application entry point
 ├── config/
