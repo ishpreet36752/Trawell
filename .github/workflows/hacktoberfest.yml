@@ -1,0 +1,151 @@
+name: 🎉 Hacktoberfest 2025
+
+on:
+  pull_request:
+    types: [opened, edited, closed]
+  issues:
+    types: [opened, edited, closed]
+
+jobs:
+  hacktoberfest-check:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: 🎯 Check Hacktoberfest Eligibility
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number
+            });
+            
+            // Check if PR is from a fork (external contributor)
+            const isExternalContributor = pr.head.repo.full_name !== pr.base.repo.full_name;
+            
+            // Check if PR has hacktoberfest label
+            const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number
+            });
+            
+            const hasHacktoberfestLabel = labels.some(label => 
+              label.name === 'hacktoberfest' || label.name === 'hacktoberfest-accepted'
+            );
+            
+            if (isExternalContributor && hasHacktoberfestLabel) {
+              // Add hacktoberfest-accepted label
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                labels: ['hacktoberfest-accepted']
+              });
+              
+              // Add comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: `🎉 **Hacktoberfest 2025 - Thank you for contributing!**
+                
+                Your pull request has been marked as **hacktoberfest-accepted**! 
+                
+                🌟 **What's next?**
+                - Your contribution will count towards Hacktoberfest 2025 (6 PRs needed)
+                - We'll review your PR and provide feedback
+                - Once merged, you'll be added to our contributors list
+                
+                💬 **Questions?** Join our [Discord server](https://discord.gg/trawell) or ask in the PR comments.
+                
+                **Happy Coding! 🚀**`
+              });
+            }
+
+  welcome-contributor:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: 👋 Welcome New Contributor
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number
+            });
+            
+            // Check if this is the contributor's first PR
+            const { data: userPRs } = await github.rest.search.issuesAndPullRequests({
+              q: `is:pr author:${pr.user.login} repo:${context.repo.owner}/${context.repo.repo}`,
+              sort: 'created',
+              order: 'asc'
+            });
+            
+            const isFirstPR = userPRs.total_count === 1;
+            
+            if (isFirstPR) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: `🎉 **Welcome to Trawell, @${pr.user.login}!**
+                
+                This is your first contribution to our project - thank you for choosing Trawell! 🌍
+                
+                🏆 **You've earned the "First Contribution" badge!**
+                
+                📚 **Resources for new contributors:**
+                - [Contributing Guide](CONTRIBUTING.md)
+                - [Code of Conduct](CODE_OF_CONDUCT.md)
+                - [Hacktoberfest Guide](HACKTOBERFEST.md)
+                
+                💬 **Need help?** Join our [Discord server](https://discord.gg/trawell) or ask questions in the PR comments.
+                
+                **We're excited to have you in our community! 🚀**`
+              });
+            }
+
+  quality-check:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: 📋 Quality Checklist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number
+            });
+            
+            // Check if PR has proper description
+            const hasDescription = pr.body && pr.body.length > 50;
+            
+            // Check if PR is linked to an issue
+            const hasLinkedIssue = pr.body && pr.body.includes('Closes #') || pr.body.includes('Fixes #');
+            
+            if (!hasDescription || !hasLinkedIssue) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: `📋 **Quality Checklist Reminder**
+                
+                To ensure your PR meets our standards, please make sure you have:
+                
+                ${!hasDescription ? '❌ **Detailed description** of your changes\n' : '✅ **Detailed description** of your changes\n'}
+                ${!hasLinkedIssue ? '❌ **Linked issue** using "Closes #issue_number" or "Fixes #issue_number"\n' : '✅ **Linked issue** using "Closes #issue_number" or "Fixes #issue_number"\n'}
+                
+                📝 **Need help?** Check our [Pull Request Template](.github/pull_request_template.md) for guidance.
+                
+                **Thank you for contributing! 🚀**`
+              });
+            }

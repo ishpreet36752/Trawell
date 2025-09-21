@@ -1,0 +1,100 @@
+name: 👥 Contributors Management
+
+on:
+  pull_request:
+    types: [closed]
+  issues:
+    types: [closed]
+
+jobs:
+  update-contributors:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 👥 Update Contributors List
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number
+            });
+            
+            // Get contributor information
+            const contributor = {
+              username: pr.user.login,
+              name: pr.user.name || pr.user.login,
+              avatar: pr.user.avatar_url,
+              profile: pr.user.html_url,
+              contributions: 1 // This would need to be calculated from all PRs
+            };
+            
+            // Add to contributors list (this would update a JSON file or database)
+            console.log('New contributor:', contributor);
+            
+            // Create welcome comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: `🎉 **Congratulations @${pr.user.login}!**
+              
+              Your pull request has been merged! 🚀
+              
+              🌟 **You're now officially a Trawell contributor!**
+              
+              - ✅ Added to our contributors list
+              - 🏆 Earned contributor badge
+              - 📝 Featured in our community highlights
+              
+              💬 **Join our community:**
+              - [Discord Server](https://discord.gg/trawell)
+              - [Twitter](https://twitter.com/TrawellApp)
+              
+              **Thank you for helping build the future of travel! 🌍**`
+            });
+
+  recognize-contributors:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' && github.event.issue.state == 'closed'
+    
+    steps:
+      - name: 🏆 Recognize Issue Contributors
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number
+            });
+            
+            // Check if issue was closed by a PR
+            const { data: linkedPRs } = await github.rest.search.issuesAndPullRequests({
+              q: `is:pr is:merged repo:${context.repo.owner}/${context.repo.repo} ${issue.title}`,
+              sort: 'updated',
+              order: 'desc'
+            });
+            
+            if (linkedPRs.total_count > 0) {
+              const pr = linkedPRs.items[0];
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                body: `🎉 **Issue Resolved!**
+                
+                This issue has been successfully resolved by @${pr.user.login} in [PR #${pr.number}](${pr.html_url})!
+                
+                🌟 **Great work on:**
+                - ${issue.title}
+                
+                💬 **Thank you for contributing to Trawell!**`
+              });
+            }
