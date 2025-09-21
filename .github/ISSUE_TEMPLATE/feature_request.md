@@ -2,7 +2,7 @@
 name: 💡 Feature Request
 about: Suggest an idea for Trawell
 title: '[FEATURE] '
-labels: ['enhancement', 'hacktoberfest']
+labels: ['enhancement', 'hacktoberfest', 'invalid', 'spam']
 assignees: ''
 ---
 

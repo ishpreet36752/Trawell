@@ -2,7 +2,7 @@
 name: 🐛 Bug Report
 about: Create a report to help us improve Trawell
 title: '[BUG] '
-labels: ['bug', 'hacktoberfest']
+labels: ['bug', 'hacktoberfest', 'invalid', 'spam']
 assignees: ''
 ---
 

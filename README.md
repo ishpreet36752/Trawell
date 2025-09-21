@@ -10,7 +10,7 @@
 [![Open Source](https://img.shields.io/badge/Open%20Source-Yes-green?style=for-the-badge&logo=github&logoColor=white)](https://github.com/yourusername/trawell-monorepo-work)
 [![License](https://img.shields.io/badge/License-ISC-blue?style=for-the-badge)](LICENSE)
 
-[🚀 Live Demo](#) | [📖 Documentation](#) | [🤝 Contributing](#contributing) | [💬 Discord](#)
+[🚀 Live Demo](#) | [📖 Documentation](#) | [🤝 Contributing](#contributing) | [🔒 Security](SECURITY.md) | [💬 Discord](#)
 
 </div>
 

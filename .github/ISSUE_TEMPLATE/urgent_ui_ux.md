@@ -2,7 +2,7 @@
 name: 🚨 URGENT UI/UX Issue
 about: Critical UI/UX improvements needed for Trawell
 title: '[URGENT UI/UX] '
-labels: ['urgent', 'ui/ux', 'hacktoberfest', 'high-priority']
+labels: ['urgent', 'ui/ux', 'hacktoberfest', 'high-priority', 'invalid', 'spam']
 assignees: ''
 ---
 

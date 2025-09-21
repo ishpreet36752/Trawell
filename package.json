@@ -1,6 +1,7 @@
 {
     "name": "trawell-monorepo",
     "private": true,
+    "topics": ["hacktoberfest", "hacktoberfest2025", "travel", "react", "nodejs", "mongodb", "fullstack", "open-source", "beginner-friendly", "good-first-issue"],
     "workspaces": [
         "apps/*",
         "packages/*"

@@ -2,7 +2,7 @@
 name: 🌟 Good First Issue
 about: Perfect for newcomers to contribute to Trawell
 title: '[GOOD FIRST ISSUE] '
-labels: ['good first issue', 'beginner-friendly', 'hacktoberfest']
+labels: ['good first issue', 'beginner-friendly', 'hacktoberfest', 'invalid', 'spam']
 assignees: ''
 ---
 
