@@ -8,7 +8,7 @@ import Profile from "./components/Profile";
 import Connections from "./components/Connections";
 import Requests from "./components/Requests";
 
-const App = () => (
+const App : React.FC = () => (
   <Provider store={appStore}>
     <BrowserRouter>
       <Routes>
