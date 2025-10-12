@@ -42,6 +42,95 @@ cp apps/web/.env.example apps/web/.env
 # Start development servers
 npm run dev
 ```
+## 🔷 **TypeScript Setup**
+
+This project uses TypeScript for type safety and better developer experience.
+
+### **Installation**
+
+```bash
+# Navigate to frontend directory
+cd apps/web
+
+# Install TypeScript and type definitions
+npm install --save-dev typescript @types/react @types/react-dom @types/react-router-dom
+
+# Install ESLint TypeScript support
+npm install --save-dev @typescript-eslint/parser @typescript-eslint/eslint-plugin
+```
+
+### **Configuration Files**
+
+**Create `tsconfig.json` in `apps/web/`:**
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
+```
+
+**Create `tsconfig.node.json` in `apps/web/`:**
+```json
+{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["vite.config.ts"]
+}
+```
+
+**Update `vite.config.ts`** (if using JavaScript, rename to `.ts`):
+```typescript
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+});
+```
+
+### **File Naming Conventions**
+
+- **`.tsx`** - React components with JSX
+- **`.ts`** - TypeScript files without JSX
+- **`.jsx`** - Migrate these to `.tsx`
+- **`.js`** - Migrate these to `.ts`
+
+### **Building and Running**
+
+```bash
+# Run development server with TypeScript
+npm run dev
+
+# Build for production
+npm run build
+
+# Run type checking
+npx tsc --noEmit
+```
+
+---
 
 ### 3. **Find an Issue**
 
