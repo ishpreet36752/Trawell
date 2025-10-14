@@ -53,8 +53,7 @@ const userAuth = async (req, res, next) => {
     // Step 3: Verify JWT token
     // jwt.verify() decodes the token and checks its signature
     // If the token is invalid or expired, it will throw an error
-    const decodeData = await jwt.verify(token, "Trawell@123$");
-    
+    const decodeData = jwt.verify(token, process.env.JWT_SECRET);
     // Step 4: Extract user ID from decoded token
     // The token payload contains the user's _id (set during token creation)
     const { _id } = decodeData;
@@ -62,7 +61,6 @@ const userAuth = async (req, res, next) => {
     // Step 5: Find user in database
     // This ensures the user still exists and hasn't been deleted
     const user = await User.findById(_id);
-    
     // Step 6: Check if user exists
     if (!user) {
       return res.status(401).json({

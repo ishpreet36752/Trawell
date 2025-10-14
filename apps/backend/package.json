@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "complete backend",
   "main": "index.js",
+  "type":"commonjs",
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js"

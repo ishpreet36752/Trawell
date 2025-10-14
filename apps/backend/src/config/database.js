@@ -9,7 +9,8 @@
  */
 
 const mongoose = require("mongoose");
-
+require("dotenv").config();
+ 
 /**
  * Connect to MongoDB Database
  * 
@@ -49,7 +50,7 @@ const connectDB = async () => {
             maxPoolSize: 10,                // Maximum number of connections in the pool
             minPoolSize: 2,                 // Minimum number of connections in the pool
             
-            // Retry settings
+            // Retry settings 
             retryWrites: true,              // Retry write operations if they fail
             w: 'majority'                   // Wait for majority of replica set members
         });
@@ -59,7 +60,7 @@ const connectDB = async () => {
         // Handle connection events for monitoring
         mongoose.connection.on('connected', () => {
             console.log("✅ Mongoose connected to MongoDB");
-        });
+        }); 
         
         mongoose.connection.on('error', (err) => {
             console.error("❌ Mongoose connection error:", err);
@@ -76,12 +77,13 @@ const connectDB = async () => {
             process.exit(0);
         });
         
+
     } catch (error) {
         console.error("❌ Failed to connect to MongoDB:", error.message);
         throw error; // Re-throw the error so the calling code can handle it
     }
 };
-
+ 
 // Export the connection function
 module.exports = connectDB;
 
@@ -110,3 +112,4 @@ module.exports = connectDB;
  * NODE_ENV=development
  */
 
+ 

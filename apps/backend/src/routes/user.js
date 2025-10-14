@@ -17,19 +17,19 @@
  * - Secure password updates
  * - Profile data validation
  */
-
+  
 const express = require("express");
-const { userAuth } = require("../middlewares/auth.js");           // Authentication middleware
-const { validUpdateData } = require("../utilis/validation.js");   // Input validation utility
-const userRouter = express.Router();                             // Express router instance
-const validator = require("validator");                          // Password validation
-const bcrypt = require("bcrypt");                                // Password hashing (though not used directly)
-const ConnectionRequest = require("../models/connectionRequest.js"); // Connection model
-const User = require("../models/user.js");                       // User model
+const userRouter = express.Router();  
+const {userAuth}=require("../middlewares/auth.js")      
+const {registerUser,loginUser,getUserProfile}=require("../controllers/user.controller.js") 
+
+
+userRouter.post("/user/register",registerUser)
+userRouter.post("/user/login",loginUser)
+userRouter.get("/user /profile/:userId",userAuth,getUserProfile)
 
 // Fields that are safe to return in user feeds (excludes sensitive data)
-const USER_SAVE_DATA = ["firstName", "lastName", "age", "gender", "image", "about"];
-
+ 
 /**
  * GET /user/feed - User Discovery Feed
  * 
@@ -293,6 +293,7 @@ userRouter.patch("/user/password", userAuth, async (req, res) => {
     });
   }
 });
+
 
 /**
  * GET /user/:id - Get User Profile
