@@ -19,13 +19,14 @@
  * - Input validation and sanitization
  */
 
-const express = require("express");
-const { validSignUpData } = require("../utilis/validation"); // Input validation utility
-const bcrypt = require("bcrypt");                            // Password hashing (though not used directly here)
-const User = require("../models/user");                      // User model for database operations
-
+import {  Router, Request, Response, CookieOptions } from "express";
+import { validSignUpData } from "../utilis/validation";// Input validation utility
+// import bcrypt from "bcrypt"                         // Password hashing (though not used directly here)
+import User from "../models/user";                    // User model for database operations
+import { SignupBody, LoginBody } from "../types/auth.types"; // TypeScript types for request bodies
+import { UserDocument } from "../types/user-model";
 // Create Express router instance for authentication routes
-const authRouter = express.Router();
+const authRouter:Router = Router();
 
 /**
  * POST /signup - User Registration Endpoint
@@ -62,7 +63,7 @@ const authRouter = express.Router();
  *   "about": "Love traveling and meeting new people!"
  * }
  */
-authRouter.post("/signup", async (req, res) => {
+authRouter.post("/signup", async (req:Request<Record<string, never>, any, SignupBody>, res:Response) => {
   try {
     // Step 1: Validate input data using validation utility
     // This ensures all required fields are present and valid
@@ -80,7 +81,7 @@ authRouter.post("/signup", async (req, res) => {
 
     // Step 3: Create new User instance
     // This triggers the pre-save middleware which will hash the password
-    const newUser = new User({
+    const newUser:UserDocument = new User({
       firstName,
       lastName,
       age,
@@ -99,14 +100,15 @@ authRouter.post("/signup", async (req, res) => {
     // Step 5: Generate JWT token for automatic login
     // The user is automatically logged in after successful registration
     const token = await newUser.getJWT();
-    
+    const isProd = process.env.NODE_ENV === "production";
+    const weekMs = 7 * 24 * 60 * 60 * 1000;
     // Step 6: Set JWT token in HTTP-only cookie
     // HTTP-only prevents JavaScript access (XSS protection)
     // 7 days expiration for user convenience
     res.cookie("token", token, {
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      expires: new Date(Date.now() + weekMs), // 7 days from now
       httpOnly: true,    // Prevents JavaScript access to the cookie
-      secure: false,     // Set to true in production with HTTPS
+      secure: isProd,     // Set to true in production with HTTPS
       sameSite: 'strict' // CSRF protection
     });
 
@@ -117,7 +119,7 @@ authRouter.post("/signup", async (req, res) => {
       token: token // Also send token in response for immediate use
     });
     
-  } catch (err) {
+  } catch (err:any) {
     // Handle validation and database errors
     console.error("❌ Signup error:", err.message);
     
@@ -129,7 +131,7 @@ authRouter.post("/signup", async (req, res) => {
       });
     }
     
-    if (err.code === 11000) { // MongoDB duplicate key error
+   if ((err as any)?.code === 11000) { // MongoDB duplicate key error
       return res.status(409).json({
         message: "Email already exists. Please use a different email or login.",
         error: "DUPLICATE_EMAIL"
@@ -168,7 +170,7 @@ authRouter.post("/signup", async (req, res) => {
  *   "password": "SecurePass123!"
  * }
  */
-authRouter.post("/login", async (req, res) => {
+authRouter.post("/login", async (req:Request<Record<string, never>, any, LoginBody>, res:Response) => {
   try {
     // Step 1: Extract login credentials from request body
     const { emailId, password } = req.body;
@@ -191,21 +193,22 @@ authRouter.post("/login", async (req, res) => {
     // Step 5: Validate password
     // This uses the instance method from the User model
     // It compares the provided password with the stored hash
-    const isValidPassword = await user.validatePassword(password);
+    const isValidPassword:boolean = await user.validatePassword(password);
 
     if (!isValidPassword) {
       throw new Error("Invalid credentials"); // Generic message for security
     }
 
     // Step 6: Generate JWT token for authenticated session
-    const token = await user.getJWT();
-
+    const token:string = await user.getJWT();
+    const isProd = process.env.NODE_ENV === "production";
+    const weekMs = 7 * 24 * 60 * 60 * 1000;
     // Step 7: Set token in HTTP-only cookie
     // Same security settings as signup
     res.cookie("token", token, {
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      expires: new Date(Date.now() + weekMs), // 7 days
       httpOnly: true,
-      secure: false,     // Set to true in production with HTTPS
+      secure: isProd,     // Set to true in production with HTTPS
       sameSite: 'strict'
     });
 
@@ -217,7 +220,7 @@ authRouter.post("/login", async (req, res) => {
       token: token
     });
     
-  } catch (err) {
+  } catch (err:any) {
     // Handle authentication errors
     console.error("❌ Login error:", err.message);
     
@@ -242,7 +245,7 @@ authRouter.post("/login", async (req, res) => {
  * Note: For enhanced security, consider implementing token blacklisting
  * in production to prevent reuse of logged-out tokens.
  */
-authRouter.post("/logout", async (req, res) => {
+authRouter.post("/logout", async (req, res:Response) => {
   try {
     // Clear the authentication cookie by setting it to expire immediately
     res.cookie("token", null, {
@@ -256,7 +259,7 @@ authRouter.post("/logout", async (req, res) => {
       message: "Logout successful"
     });
     
-  } catch (err) {
+  } catch (err:any) {
     console.error("❌ Logout error:", err.message);
     res.status(500).json({
       message: "Logout failed",
@@ -266,7 +269,7 @@ authRouter.post("/logout", async (req, res) => {
 });
 
 // Export the router for use in the main application
-module.exports = authRouter;
+export default authRouter;
 
 /**
  * SECURITY CONSIDERATIONS:

@@ -11,18 +11,18 @@
  * validation for user data integrity and security.
  */
 
-const mongoose = require("mongoose");
-const validator = require("validator"); // Email and password validation library
-const jwt = require("jsonwebtoken");    // JWT token generation and verification
-const bcrypt = require("bcrypt");       // Password hashing library
-
+import mongoose, {  Schema } from "mongoose";
+import validator from "validator"; // Email and password validation library
+import jwt from "jsonwebtoken";   // JWT token generation and verification
+import bcrypt from "bcrypt";      // Password hashing library
+import { IUser, IUserMethods, UserDocument,UserModel } from "../types/user-model"; // TypeScript interfaces
 /**
  * User Schema Definition
  * 
  * Defines the structure and validation rules for user documents in MongoDB.
  * Each field has specific types, validation rules, and default values.
  */
-const userSchema = new mongoose.Schema(
+const userSchema = new Schema<IUser, UserModel, IUserMethods>(
   {
     // User's first name - required field with length constraints
     firstName: {
@@ -49,7 +49,7 @@ const userSchema = new mongoose.Schema(
       trim: true,          // Remove whitespace
       validate: {
         // Custom validator using validator.js library
-        validator: (value) => validator.isEmail(value),
+        validator: (value:string) => validator.isEmail(value),
         message: "Please provide a valid email address",
       },
     },
@@ -60,7 +60,7 @@ const userSchema = new mongoose.Schema(
       required: [true, "Password is required"],
       validate: {
         // Ensure password meets security requirements
-        validator: (value) => validator.isStrongPassword(value, {
+        validator: (value:string) => validator.isStrongPassword(value, {
           minLength: 8,           // Minimum 8 characters
           minLowercase: 1,        // At least 1 lowercase letter
           minUppercase: 1,        // At least 1 uppercase letter
@@ -78,7 +78,7 @@ const userSchema = new mongoose.Schema(
       min: [18, "User must be at least 18 years old"],
       validate: {
         // Custom validator to ensure age is a reasonable number
-        validator: (value) => value >= 18 && value <= 120,
+        validator: (value:number) => value >= 18 && value <= 120,
         message: "Age must be between 18 and 120 years",
       },
     },
@@ -100,7 +100,7 @@ const userSchema = new mongoose.Schema(
       default: "https://www.iibsonline.com/public/testimonial/testimonial_image_full/183.png", // Default avatar
       validate: {
         // Ensure the image URL is valid
-        validator: (value) => validator.isURL(value),
+        validator: (value:string) => validator.isURL(value),
         message: "Please provide a valid image URL",
       },
     },
@@ -133,16 +133,16 @@ const userSchema = new mongoose.Schema(
  * - Logging
  * - Pre-processing data
  */
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function (this: UserDocument & IUser, next) {
   // 'this' refers to the current document being saved
-  
+
   // Only hash the password if it has been modified (new user or password change)
   if (this.isModified("password")) {
     try {
       // Hash password with salt rounds of 10 (higher = more secure but slower)
       this.password = await bcrypt.hash(this.password, 10);
       console.log("🔐 Password hashed successfully");
-    } catch (error) {
+    } catch (error:any) {
       console.error("❌ Password hashing failed:", error);
       return next(error); // Pass error to next middleware
     }
@@ -166,7 +166,7 @@ userSchema.pre("save", async function (next) {
  * const user = new User({...});
  * const token = await user.getJWT();
  */
-userSchema.methods.getJWT = async function () {
+userSchema.methods.getJWT = async function (): Promise<string> {
   const user = this; // 'this' refers to the user instance
   
   try {
@@ -198,7 +198,7 @@ userSchema.methods.getJWT = async function () {
  * const user = await User.findOne({ emailId: "user@example.com" });
  * const isValid = await user.validatePassword("userPassword123");
  */
-userSchema.methods.validatePassword = async function (passwordByUser) {
+userSchema.methods.validatePassword = async function (passwordByUser:string): Promise<boolean>  {
   const user = this; // 'this' refers to the user instance
   
   try {
@@ -227,8 +227,8 @@ userSchema.methods.validatePassword = async function (passwordByUser) {
 
 // Create and export the User model
 // This creates a collection named 'users' in MongoDB (Mongoose pluralizes the model name)
-module.exports = mongoose.model("User", userSchema);
-
+const User = mongoose.model<IUser, UserModel>("User", userSchema);
+export default User;
 /**
  * SECURITY BEST PRACTICES IMPLEMENTED:
  * 

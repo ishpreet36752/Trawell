@@ -10,16 +10,17 @@
  */
 
 // Load environment variables from .env file FIRST (before any other imports)
-require('dotenv').config();
 
+import dotenv from "dotenv"
+dotenv.config();
 // Import required Node.js modules and third-party packages
-const express = require("express");           // Web framework for Node.js
-const cookieParser = require("cookie-parser"); // Parse cookies from request headers
-const connectDB = require("./config/database"); // Database connection function
-const cors = require("cors");                 // Enable Cross-Origin Resource Sharing
-
+import express, {Express} from "express";         // Web framework for Node.js
+import cookieParser from "cookie-parser"; // Parse cookies from request headers
+import connectDB from "./config/database"; // Database connection function
+import cors from "cors";             // Enable Cross-Origin Resource Sharing
+import { Router } from "express";          // Router for modular route handling
 // Create Express application instance
-const app = express();
+const app:Express = express();
 
 /**
  * CORS (Cross-Origin Resource Sharing) Configuration
@@ -54,10 +55,17 @@ app.use(cookieParser());                     // Parse cookies from request heade
  * Import and register different route modules. Each route file handles
  * a specific feature area of the application.
  */
-const authRouter = require("./routes/auth");       // Authentication routes (login, signup, logout)
-const userRouter = require("./routes/user");       // User profile management routes
-const matchesRouter = require("./routes/matches"); // Travel matching and companion finding
-const groupRouter = require("./routes/groups");    // Group creation and management
+
+
+
+// @ts-ignore
+import authRouter from "./routes/auth";      // Authentication routes (login, signup, logout)
+// @ts-ignore
+import userRouter from "./routes/user";      // User profile management routes
+// @ts-ignore
+import matchesRouter from "./routes/matches";// Travel matching and companion finding
+// @ts-ignore
+import groupRouter from "./routes/groups";   // Group creation and management
 
 // Mount routes on the main application
 // All routes from these modules will be accessible from the root path "/"
@@ -73,18 +81,21 @@ app.use("/", groupRouter);     // e.g., GET /groups, POST /groups
  * connecting to the MongoDB database. This ensures data persistence
  * is available before accepting any requests.
  */
-connectDB()
+const connectDatabase: () => Promise<void> = connectDB;
+
+connectDatabase()
   .then(() => {
     console.log("✅ Connected to MongoDB database successfully");
     
     // Get port from environment variable or use default
-    const PORT = process.env.PORT || 7777;
-    
+    const PORT:number =parseInt(process.env.PORT || "7777", 10);
+    const FRONTEND_URL: string = process.env.FRONTEND_URL || "http://localhost:5173";
+    const NODE_ENV: string = process.env.NODE_ENV || "development";
     // Start the HTTP server on the configured port
-    app.listen(PORT, () => {
+    app.listen(PORT, ():void => {
       console.log("🚀 Server is running on port", PORT);
-      console.log("📱 Frontend can connect at:", process.env.FRONTEND_URL || `http://localhost:${PORT}`);
-      console.log("🌍 Environment:", process.env.NODE_ENV || "development");
+      console.log("📱 Frontend can connect at:", FRONTEND_URL || `http://localhost:${PORT}`);
+      console.log("🌍 Environment:", NODE_ENV || "development");
     });
   })
   .catch((err) => {
@@ -96,4 +107,4 @@ connectDB()
   });
 
 // Export the app instance for testing purposes
-module.exports = app;
+export default app;
