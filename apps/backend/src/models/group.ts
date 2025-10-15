@@ -1,7 +1,8 @@
-const mongoose = require("mongoose");
-const user = require("./user");
+import mongoose , {Schema} from "mongoose";
+import {GroupDocument} from "../types/group-type";
 
-const groupSchema = new mongoose.Schema(
+
+const groupSchema = new Schema<GroupDocument>(
   {
     groupName: {
       type: String,
@@ -14,14 +15,14 @@ const groupSchema = new mongoose.Schema(
       required: true,
     },
     groupAdmin: {
-      type: mongoose.Schema.Types.ObjectId ,
+      type: Schema.Types.ObjectId ,
       ref: "User",
       required: true,
     },
     groupMembers: [
       {
         user: {
-          type: mongoose.Schema.Types.ObjectId,
+          type: Schema.Types.ObjectId,
           ref: "User",
         },
         isVerified: {
@@ -52,4 +53,5 @@ const groupSchema = new mongoose.Schema(
 );
 groupSchema.index({ "groupMembers.user": 1 });
 
-module.exports = mongoose.model("Group", groupSchema);
+const Group = mongoose.model<GroupDocument>("Group", groupSchema);
+export default Group;

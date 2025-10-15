@@ -18,17 +18,20 @@
  * - Profile data validation
  */
 
-const express = require("express");
-const { userAuth } = require("../middlewares/auth.js");           // Authentication middleware
-const { validUpdateData } = require("../utilis/validation.js");   // Input validation utility
-const userRouter = express.Router();                             // Express router instance
-const validator = require("validator");                          // Password validation
-const bcrypt = require("bcrypt");                                // Password hashing (though not used directly)
-const ConnectionRequest = require("../models/connectionRequest.js"); // Connection model
-const User = require("../models/user.js");                       // User model
-
+import express, { Router } from "express";
+import { userAuth } from "../middlewares/auth";           // Authentication middleware
+import { validUpdateData } from "../utilis/validation.js";  // Input validation utility
+const userRouter: Router = express.Router();                           // Express router instance
+import validator from "validator";                        // Password validation
+import bcrypt from "bcrypt";                              // Password hashing (though not used directly)
+import ConnectionRequest from "../models/connectionRequest"; // Connection model
+import User from "../models/user";                     // User model
+import { AuthenticatedRequest } from "../types/auth-request";
+import { Request, Response } from "express";
+import { ConnectionRequestDocument } from "../types/connection-request";
+import { UserDocument } from "../types/user-model";
 // Fields that are safe to return in user feeds (excludes sensitive data)
-const USER_SAVE_DATA = ["firstName", "lastName", "age", "gender", "image", "about"];
+const USER_SAVE_DATA = ["firstName", "lastName", "age", "gender", "image", "about"] as const;
 
 /**
  * GET /user/feed - User Discovery Feed
@@ -54,15 +57,18 @@ const USER_SAVE_DATA = ["firstName", "lastName", "age", "gender", "image", "abou
  * GET /user/feed?page=1&limit=20
  * // Returns first 20 potential travel companions
  */
-userRouter.get("/user/feed", userAuth, async (req, res) => {
+userRouter.get("/user/feed", userAuth, async (req:AuthenticatedRequest, res:Response):Promise<void> => {
   try {
     // Get the authenticated user from the request (set by userAuth middleware)
     const loggedUser = req.user;
-
+    if (!loggedUser) {
+        res.status(401).json({ message: "Unauthorized access" });
+        return;
+      }
     // Extract pagination parameters from query string
-    const page = parseInt(req.query.page) || 1;           // Current page (default: 1)
-    let limit = parseInt(req.query.limit) || 10;          // Users per page (default: 10)
-    limit = limit > 50 ? 50 : limit;                      // Cap limit at 50 for performance
+    const page = parseInt(req.query.page ?? "1", 10);           // Current page (default: 1)
+    let limit = parseInt(req.query.limit ?? "10", 10);         // Users per page (default: 10)
+    limit = Math.min(limit, 50);                     // Cap limit at 50 for performance
     const skip = (page - 1) * limit;                      // Calculate offset for pagination
 
     // Step 1: Find all connection requests involving the logged-in user
@@ -72,11 +78,11 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
         { fromUserId: loggedUser._id },  // Requests sent by the user
         { toUserId: loggedUser._id }     // Requests received by the user
       ],
-    }).select("fromUserId toUserId"); // Only select the user ID fields for efficiency
+    }).select("fromUserId toUserId")as ConnectionRequestDocument[]; // Only select the user ID fields for efficiency
 
     // Step 2: Create a set of user IDs to exclude from the feed
     // Using Set for efficient lookup and automatic deduplication
-    const hideUserFromFeed = new Set();
+    const hideUserFromFeed = new Set<String>();
     connectionRequests.forEach((req) => {
       hideUserFromFeed.add(req.fromUserId.toString());
       hideUserFromFeed.add(req.toUserId.toString());
@@ -93,7 +99,7 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
     })
       .select(USER_SAVE_DATA)  // Only return safe, non-sensitive fields
       .skip(skip)              // Skip users for pagination
-      .limit(limit);           // Limit results per page
+      .limit(limit) as UserDocument[];           // Limit results per page
 
     // Step 4: Send the filtered and paginated user feed
     res.status(200).json({
@@ -106,7 +112,7 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
       }
     });
     
-  } catch (err) {
+  } catch (err:any) {
     console.error("❌ User feed error:", err.message);
     res.status(500).json({
       message: "Failed to retrieve user feed",
@@ -137,18 +143,21 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
  *   ]
  * }
  */
-userRouter.get("/user/connections/pending", userAuth, async (req, res) => {
+userRouter.get("/user/connections/pending", userAuth, async (req:AuthenticatedRequest, res:Response):Promise<void> => {
   try {
     // Get the authenticated user from the request
     const loggedUser = req.user;
-
+    if (!loggedUser?._id) {
+        res.status(401).json({ message: "Unauthorized access" });
+        return;
+      }
     // Find all connection requests where:
     // - The logged-in user is the recipient (toUserId)
     // - The status is "like" (pending request)
     const connectionRequest = await ConnectionRequest.find({
       toUserId: loggedUser._id,
       status: "like",
-    }).populate("fromUserId", ["_id", "firstName", "lastName", "age", "gender", "image", "about"]);
+    }).populate("fromUserId", ["_id", "firstName", "lastName", "age", "gender", "image", "about"]).exec() as ConnectionRequestDocument[]; // Populate sender details
 
     res.status(200).json({
       message: "All pending connections",
@@ -156,7 +165,7 @@ userRouter.get("/user/connections/pending", userAuth, async (req, res) => {
       count: connectionRequest.length
     });
     
-  } catch (err) {
+  } catch (err:any) {
     console.error("❌ Pending connections error:", err.message);
     res.status(500).json({
       message: "Failed to retrieve pending connections",
@@ -180,11 +189,14 @@ userRouter.get("/user/connections/pending", userAuth, async (req, res) => {
  * 2. For each connection, determine which user is the "other person"
  * 3. Return array of connected users (excluding the logged-in user)
  */
-userRouter.get("/user/connections", userAuth, async (req, res) => {
+userRouter.get("/user/connections", userAuth, async (req:AuthenticatedRequest, res:Response):Promise<void> => {
   try {
     // Get the authenticated user from the request
     const loggedUser = req.user;
-
+    if (!loggedUser?._id) {
+        res.status(401).json({ message: "Unauthorized access" });
+        return;
+      }
     // Find all accepted connection requests where the logged-in user is involved
     const connectionRequests = await ConnectionRequest.find({
       $or: [
@@ -193,12 +205,12 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
       ],
     })
       .populate("fromUserId", ["firstName", "lastName", "age", "gender", "image", "about"])
-      .populate("toUserId", ["firstName", "lastName", "age", "gender", "image", "about"]);
+      .populate("toUserId", ["firstName", "lastName", "age", "gender", "image", "about"]).exec() as ConnectionRequestDocument[];;
 
     // Process the connections to return only the "other person" in each connection
     // This prevents showing the logged-in user in their own connections list
     const data = connectionRequests.map((row) => {
-      if (row.fromUserId._id.toString() === loggedUser._id.toString()) {
+      if ((row.fromUserId._id as any).toString() === (loggedUser._id as any).toString()) {
         return row.toUserId;    // If user sent the request, return the recipient
       }
       return row.fromUserId;    // If user received the request, return the sender
@@ -210,7 +222,7 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
       count: data.length
     });
     
-  } catch (err) {
+  } catch (err:any) {
     console.error("❌ Connections error:", err.message);
     res.status(500).json({
       message: "Failed to retrieve connections",
@@ -241,10 +253,14 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
  * - Strong password requirements
  * - Automatic password hashing (handled by User model)
  */
-userRouter.patch("/user/password", userAuth, async (req, res) => {
+userRouter.patch("/user/password", userAuth, async (req:AuthenticatedRequest, res:Response):Promise<void> => {
   try {
     // Extract password data from request body
-    const { currentPassword, newPassword, confirmPassword } = req.body;
+    const { currentPassword, newPassword, confirmPassword } = req.body as {
+        currentPassword?: string;
+        newPassword?: string;
+        confirmPassword?: string;
+      };
 
     // Step 1: Validate that all required fields are provided
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -253,7 +269,10 @@ userRouter.patch("/user/password", userAuth, async (req, res) => {
 
     // Get the authenticated user from the request
     const loggedUser = req.user;
-
+    if (!loggedUser?._id) {
+        res.status(401).json({ message: "Unauthorized access" });
+        return;
+      }
     // Step 2: Verify the current password
     const isValidPassword = await loggedUser.validatePassword(currentPassword);
     if (!isValidPassword) {
@@ -285,7 +304,7 @@ userRouter.patch("/user/password", userAuth, async (req, res) => {
       }
     });
     
-  } catch (err) {
+  } catch (err:any) {
     console.error("❌ Password update error:", err.message);
     res.status(400).json({
       message: "Password update failed",
@@ -309,7 +328,7 @@ userRouter.patch("/user/password", userAuth, async (req, res) => {
  * Note: This endpoint could be enhanced to allow viewing other users' profiles
  * by implementing proper authorization checks.
  */
-userRouter.get("/user/:id", userAuth, async (req, res) => {
+userRouter.get("/user/:id", userAuth, async (req:AuthenticatedRequest, res:Response):Promise<void> => {
   try {
     // Get the authenticated user from the request (set by userAuth middleware)
     const user = req.user;
@@ -319,7 +338,7 @@ userRouter.get("/user/:id", userAuth, async (req, res) => {
       user: user
     });
     
-  } catch (err) {
+  } catch (err:any) {
     console.error("❌ User profile error:", err.message);
     res.status(500).json({
       message: "Failed to retrieve user profile",
@@ -346,7 +365,7 @@ userRouter.get("/user/:id", userAuth, async (req, res) => {
  * - Input sanitization and validation
  * - Authentication required
  */
-userRouter.patch("/user/:id", userAuth, async (req, res) => {
+userRouter.patch("/user/:id", userAuth, async (req:AuthenticatedRequest, res:Response):Promise<void> => {
   try {
     // Step 1: Validate the update data using validation utility
     if (!validUpdateData(req)) {
@@ -371,7 +390,7 @@ userRouter.patch("/user/:id", userAuth, async (req, res) => {
       user: loggedUser
     });
     
-  } catch (err) {
+  } catch (err:any) {
     console.error("❌ Profile update error:", err.message);
     res.status(400).json({
       message: "Profile update failed",
@@ -381,7 +400,7 @@ userRouter.patch("/user/:id", userAuth, async (req, res) => {
 });
 
 // Export the router for use in the main application
-module.exports = userRouter;
+export {userRouter}
 
 /**
  * USER MANAGEMENT FEATURES IMPLEMENTED:

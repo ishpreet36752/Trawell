@@ -15,9 +15,10 @@
  * - The authenticated user will be available as req.user in the route handler
  */
 
-const jwt = require("jsonwebtoken");  // JWT verification library
-const User = require("../models/user"); // User model for database queries
-
+import jwt, { JwtPayload } from "jsonwebtoken"; // JWT verification library
+import User from "../models/user";// User model for database queries
+import { Request, Response, NextFunction } from "express";
+import { UserDocument } from "../types/user-model";
 /**
  * User Authentication Middleware
  * 
@@ -36,11 +37,16 @@ const User = require("../models/user"); // User model for database queries
  *   res.json(req.user);
  * });
  */
-const userAuth = async (req, res, next) => {
+interface AuthenticatedRequest extends Request {
+  user?: UserDocument;
+  cookies: { token?: string };
+}
+
+const userAuth = async (req: AuthenticatedRequest, res: Response,  next: NextFunction) => {
   try {
     // Step 1: Extract JWT token from cookies
     // The token was set during login/signup in an HTTP-only cookie
-    const { token } = req.cookies;
+    const  token  = req.cookies?.token as string | undefined;
     
     // Step 2: Check if token exists
     if (!token) {
@@ -53,7 +59,8 @@ const userAuth = async (req, res, next) => {
     // Step 3: Verify JWT token
     // jwt.verify() decodes the token and checks its signature
     // If the token is invalid or expired, it will throw an error
-    const decodeData = await jwt.verify(token, "Trawell@123$");
+    const secret = process.env.JWT_SECRET || "Trawell@123$"; // fallback for dev
+    const decodeData = await jwt.verify(token, secret) as JwtPayload;
     
     // Step 4: Extract user ID from decoded token
     // The token payload contains the user's _id (set during token creation)
@@ -78,7 +85,7 @@ const userAuth = async (req, res, next) => {
     // Step 8: Continue to next middleware or route handler
     next();
     
-  } catch (err) {
+  } catch (err:any) {
     // Handle different types of JWT errors
     if (err.name === 'JsonWebTokenError') {
       return res.status(401).json({
@@ -104,7 +111,7 @@ const userAuth = async (req, res, next) => {
 };
 
 // Export the middleware function
-module.exports = { userAuth };
+export { userAuth };
 
 /**
  * HOW JWT AUTHENTICATION WORKS:
