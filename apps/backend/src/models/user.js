@@ -95,7 +95,7 @@ const userSchema = new mongoose.Schema(
     },
     
     // User's profile picture URL
-    image: {
+    profileImage: {
       type: String,
       default: "https://www.iibsonline.com/public/testimonial/testimonial_image_full/183.png", // Default avatar
       validate: {

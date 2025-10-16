@@ -45,8 +45,12 @@ app.options('*', cors());
  * These middleware functions process requests before they reach the route handlers.
  * Order matters - middleware is executed in the order they're added.
  */
-app.use(express.json());                     // Parse JSON request bodies
+app.use(express.json({limit:"16kb"}));                     // Parse JSON request bodies
+app.use(express.urlencoded({ extended: true ,limit:"16kb"}));  // for  form-urlencoded
+app.use(express.static("public"))  // '/public',
 app.use(cookieParser());                     // Parse cookies from request headers
+
+
 
 /**
  * Route Registration

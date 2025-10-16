@@ -22,11 +22,11 @@ const express = require("express");
 const userRouter = express.Router();  
 const {userAuth}=require("../middlewares/auth.js")      
 const {registerUser,loginUser,getUserProfile}=require("../controllers/user.controller.js") 
+const {upload}=require("../middlewares/multer.middleware.js");
 
-
-userRouter.post("/user/register",registerUser)
+userRouter.post("/user/register",upload.single("profileImage"),registerUser)
 userRouter.post("/user/login",loginUser)
-userRouter.get("/user /profile/:userId",userAuth,getUserProfile)
+userRouter.get("/user/profile/:userId",userAuth, getUserProfile)
 
 // Fields that are safe to return in user feeds (excludes sensitive data)
  

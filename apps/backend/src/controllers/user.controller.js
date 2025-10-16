@@ -1,10 +1,10 @@
-const User=require("../models/user")
+const User=require("../models/user");
+const { uploadOnCloudinary } = require("../utilis/cloudinary");
 
 // register a new user
  async function registerUser(req, res) {
 	try {
-		const {firstName,lastName,emailId,password, age , gender, image, about} = req.body;
-
+		const {firstName,lastName,emailId,password, age , gender, about} = req.body;
 	// check required fields are present or not
 	if(!firstName || !emailId || !password  ){
 		return res.status(400).json({message: "First name, email and password are required"});
@@ -14,6 +14,11 @@ const User=require("../models/user")
 		if(existingUser.length > 0){
 			return res.status(400).json({message: "User already exists with this email"});
 		}
+		const profileImageLocalPath=req.file?.path;
+		let profileImage;
+		if(profileImageLocalPath){
+			profileImage=await uploadOnCloudinary(profileImageLocalPath)
+		}
 		// create a new user
 		const newUser=await User.create({
 			firstName,
@@ -22,15 +27,17 @@ const User=require("../models/user")
 			password,
 			age,
 			gender,
-			image,
+			profileImage : profileImage.url || "",
 			about
 		})
+		// generate token
 		const token=await newUser.getJWT();
 		return res.cookie(
-			"token", token, {
+			"token", token, 
+			{
               httpOnly: true,      // only accessible via HTTP, not JS
              maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-            }).status(201).json({message: "User registered successfully", user: newUser});
+            }).status(201).json({message: "User registered successfully", user:newUser});
 
 	} catch (error) {
 		return res.status(500).json({message: "Server error", error: error.message});
@@ -53,6 +60,7 @@ async function loginUser(req, res) {
 		if(!isMatch){
 			return res.status(400).json({message: "Invalid  password"});
 		}
+		// generate token
 		const token= await user.getJWT();
           
 		return  res.cookie

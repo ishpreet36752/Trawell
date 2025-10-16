@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "complete backend",
   "main": "index.js",
-  "type":"commonjs",
+  "type": "commonjs",
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js"
@@ -24,6 +24,7 @@
     "install": "^0.13.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.7.1",
+    "multer": "^2.0.2",
     "nodemon": "^3.1.7",
     "npm": "^11.1.0",
     "validator": "^13.12.0"
