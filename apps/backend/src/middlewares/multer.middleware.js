@@ -9,9 +9,9 @@ const storage = multer.diskStorage({
       const uploadFolder = "./profileImages";
 
       // Ensure the directory exists
-`      if (!fs.existsSync(uploadFolder)) {
+      if (!fs.existsSync(uploadFolder)) {
         fs.mkdirSync(uploadFolder, { recursive: true });
-      }`
+      }
 
       // Attach folder path for later use
       req.uploadFolder = uploadFolder;

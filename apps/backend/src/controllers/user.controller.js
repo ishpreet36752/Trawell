@@ -86,5 +86,147 @@ async function loginUser(req, res) {
 	return res.status(500).json({message: "Server error", error: error.message});
  }
 }
+//  logout user
+async function logout(req,res){
+ try{
+	
+	let  existUser = await User.findByIdAndUpdate(req.user._id);
+  
+	if (!existUser) {
+	  // If not found in User model, check in Employee model
+	  existUser = await Employee.findByIdAndUpdate( req.user._id); 
+	}
+  
+	if (!existUser) { 
+		// console.log("user not found");
+	  return res.status(404).json(404, {}, "User not found");
+	} 
+	const token = await User.findById(req.user._id).select("token")
 
-module.exports={registerUser,loginUser,getUserProfile}
+	const options = {
+        httpOnly: true,
+        secure: true
+	}
+	return res
+	  .status(200)
+	  .clearCookie("token",token,options)
+	  .json( {message: "User logged out"});
+  }
+  catch(err){
+	return res.status(500).json(err.message);
+  }
+}
+//  update user profile like firstName , lastName, gender , age , about
+async function updateUser(req,res) {
+	try {
+		const {firstName,lastName,emailId,age, gender,about}=req.body;
+		const userId=req.user._id;
+		const user=await User.findById(userId);
+		if(!user){
+			return res.status(404).json({message:"user not found"});
+		}
+		const updateUser=await User.findByIdAndUpdate(userId,
+			{
+				firstName:firstName,
+				lastName:lastName,
+				emailId:emailId,
+				age:age,
+				about:about,
+				gender:gender,
+				
+			},
+			{ new:true, runValidators:true}
+		);
+
+		return res.status(200).json({message:"update user sucessfully" , user:updateUser})
+
+	} catch (error) {
+		return res.status(500).json({message:"error while updating userprofile",error:error.message});
+	}
+	
+}
+
+// update user password
+async function updatePassword(req,res) {
+	try {
+		const {currentPassword,newPassword}=req.body
+		const user=await User.findById(req.user._id);
+		if(!user){
+			return res.status(404).json({message:"user not found"})
+		}
+		if( !currentPassword || !newPassword ){
+			return res.status(404).json({message:"please enter current and new password"})
+		}
+		const isMatch= await user.validatePassword(currentPassword,user.password)
+		if(!isMatch){
+			return res.status(401).json({message:"Incorrect current password"})
+		}
+		if (currentPassword === newPassword) {
+            return res.status(400).json({message:"New password cannot be the same as current password"})
+      }
+
+		user.password=newPassword;
+		await user.save();
+       return res.status(200).json({message:"password updated"})
+
+
+	} catch (error) {
+		return res.status(500).json({message:"error while update password" , error:error.message})
+	}
+	
+}
+
+// update profile image of the user
+async function updateProfileImage(req,res) {
+	try {
+		const user=await User.findById(req.user._id)
+		if(!user){
+			return res.status(404).json({message:"user not found"})
+		}
+
+		const profileImageLocalPath=req.file?.path;
+		let profileImage;
+		if(profileImageLocalPath){
+			profileImage=await uploadOnCloudinary(profileImageLocalPath)
+		}
+		user.profileImage=profileImage.url;
+		await user.save();
+		return res.status(200).json({message:"updated user profile",user:user.profileImage})
+	} catch (error) {
+		return res.status(500).json({message:"error while updating profile image",error:error.message})
+	}
+	
+}
+//  delete user profile
+async function deleteUserProfile(req,res) {
+	try {
+		const {password}=req.body
+		if(!password){
+			return res.status(400).json({message:"please enter password"})
+		}
+		const user =await User.findById(req.user._id)
+		if(!user){
+			return res.status(404).jason({message:"user not found"})
+		}
+		const isMatch=await user.validatePassword(password,user.password)
+		if(!isMatch){
+			return res.status(401).json({message:"wrong password enter valid password"})
+		}
+		await user.deleteOne()
+		return res.status(200).json({message:"successfully delete user profile"})
+		
+	} catch (error) {
+		return res.status(500).json({message:"error while deleting profile",error:error.message})
+	}
+	
+}
+module.exports={
+	registerUser,
+	loginUser,
+	getUserProfile,
+	logout,
+	updateUser,
+	updatePassword,
+	updateProfileImage,
+	deleteUserProfile
+}
