@@ -13,7 +13,7 @@ export interface IGroup {
   destination: string[];
   travelDate: string;
   status?: "open" | "closed";
-  maxMembers?: number;
+  maxMembers: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

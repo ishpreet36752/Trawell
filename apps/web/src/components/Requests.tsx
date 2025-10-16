@@ -4,12 +4,14 @@ import { BASE_URL } from "../utils/contants";
 import { useDispatch, useSelector } from "react-redux";
 import { addRequest } from "../utils/requestSlice";
 import CardDemo from "./ConnectionCard"; // same CardDemo, no buttons inside
-
+import type { AppDispatch , RootState} from "../utils/appStore";
+import { Request } from "../types/request";
+import {User} from "../types/user"
 const Requests = () => {
-  const dispatch = useDispatch();
-  const reqs = useSelector((store) => store.requests);
+  const dispatch = useDispatch<AppDispatch>();
+  const reqs = useSelector((store:RootState) => store.requests) as Request[];
 
-  const fetchRequests = async () => {
+  const fetchRequests = async ():Promise<void> => {
     try {
       const res = await axios.get(`${BASE_URL}/user/connections/pending`, {
         withCredentials: true,
@@ -21,7 +23,7 @@ const Requests = () => {
   };
 
   // The function to review each request
-  const reviewRequest = async (status, requestId) => {
+  const reviewRequest = async (status:"accept"|"reject", requestId:string):Promise<void> => {
     try {
       await axios.post(
         `${BASE_URL}/request/review/${status}/${requestId}`,
@@ -51,7 +53,7 @@ const Requests = () => {
         {reqs.filter(req => req?.fromUserId).map((req) => (
           <div key={req?.fromUserId?._id}>
             {/* Card */}
-            <CardDemo connection={req?.fromUserId} />
+            <CardDemo connection={req?.fromUserId!} />
 
             {/* Buttons (same classes as before) */}
             <div className="m-3 flex justify-between mx-4">

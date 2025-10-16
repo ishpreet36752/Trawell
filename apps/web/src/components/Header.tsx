@@ -7,14 +7,18 @@ import { AlignJustify } from "lucide-react";
 import { BASE_URL } from "../utils/contants";
 import { removeUser } from "../utils/userSlice";
 import { useDispatch } from "react-redux";
-
-const Header = ({ toggleSidebar }) => {
-  const user = useSelector((store) => store.user);
-  const dispatch = useDispatch();
+import { AppDispatch,RootState } from "../utils/appStore";
+import { User } from "../types/user";
+interface HeaderProp{
+  toggleSidebar:()=>void;
+}
+const Header:React.FC<HeaderProp> = ({ toggleSidebar }) => {
+  const user = useSelector((store:RootState) => store.user) as User|null;
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const logoutUser = async () => {
+  const logoutUser = async ():Promise<void> => {
     try {
       const res = await axios.post(
         `${BASE_URL}/logout`,

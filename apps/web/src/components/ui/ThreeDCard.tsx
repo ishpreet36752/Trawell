@@ -1,14 +1,15 @@
-import React, { useState, useRef, useEffect, useContext, createContext } from "react";
+import React, { useState, useRef, useEffect, useContext, createContext, ReactNode } from "react";
 import { cn } from "../../utils/utils";
 import Image from "react";
+import {CardContainerProps , CardBodyProps , CardItemProps} from "../../types/threeDCard"
+type MouseEnterContextType = [boolean, React.Dispatch<React.SetStateAction<boolean>>];
+const MouseEnterContext = createContext<MouseEnterContextType | null>(null);
 
-const MouseEnterContext = createContext();
+export const CardContainer:React.FC<CardContainerProps> = ({ children, className, containerClassName }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isMouseEntered, setIsMouseEntered] = useState<boolean>(false);
 
-export const CardContainer = ({ children, className, containerClassName }) => {
-  const containerRef = useRef(null);
-  const [isMouseEntered, setIsMouseEntered] = useState(false);
-
-  const handleMouseMove = (e) => {
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>):void => {
     if (!containerRef.current) return;
     const { left, top, width, height } = containerRef.current.getBoundingClientRect();
     const x = (e.clientX - left - width / 2) / 25;
@@ -16,7 +17,7 @@ export const CardContainer = ({ children, className, containerClassName }) => {
     containerRef.current.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
   };
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = ():void => {
     if (!containerRef.current) return;
     setIsMouseEntered(false);
     containerRef.current.style.transform = `rotateY(0deg) rotateX(0deg)`;
@@ -40,25 +41,27 @@ export const CardContainer = ({ children, className, containerClassName }) => {
   );
 };
 
-export const CardBody = ({ children, className }) => (
+export const CardBody: React.FC<CardBodyProps> = ({ children, className }) => (
   <div className={cn("h-[27rem] w-96 [transform-style:preserve-3d]", className)}>{children}</div>
 );
 
-export const CardItem = ({ as: Tag = "div", children, className, translateZ = 0, ...rest }) => {
-  const ref = useRef(null);
-  const [isMouseEntered] = useContext(MouseEnterContext);
-
+export const CardItem:React.FC<CardItemProps> = ({ as: Tag = "div", children, className, translateZ = 0, ...rest }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const context = useContext(MouseEnterContext);
+  if (!context) {
+  throw new Error("CardItem must be used within a CardContainer");
+  }
+  const [isMouseEntered] = context;
   useEffect(() => {
     if (!ref.current) return;
-    if (isMouseEntered) {
-      ref.current.style.transform = `translateZ(${translateZ}px)`;
-    } else {
-      ref.current.style.transform = "translateZ(0px)";
-    }
-  }, [isMouseEntered]);
+    ref.current.style.transform = isMouseEntered
+      ? `translateZ(${translateZ}px)`
+      : "translateZ(0px)";
+  }, [isMouseEntered, translateZ]);
+
 
   return (
-    <Tag ref={ref} className={cn("w-fit transition duration-200 ease-linear ", className)} {...rest}>
+    <Tag  ref={ref as React.RefObject<any>} className={cn("w-fit transition duration-200 ease-linear ", className)} {...rest}>
       {children}
     </Tag>
   );

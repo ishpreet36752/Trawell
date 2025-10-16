@@ -19,11 +19,13 @@
  * - Proper authorization checks
  */
 
-const express = require("express");
-const { userAuth } = require("../middlewares/auth.js");           // Authentication middleware
-const User = require("../models/user.js");                       // User model for validation
-const ConnectionRequest = require("../models/connectionRequest.js"); // Connection request model
-const matchesRouter = express.Router();                          // Express router instance
+import {Router,Response} from "express"; // Express framework for routing
+import { userAuth } from "../middlewares/auth";         // Authentication middleware
+import { AuthenticatedRequest } from "../types/auth-request";
+import User from "../models/user";                    // User model for validation
+import ConnectionRequestModel from "../models/connectionRequest"; // Connection request model
+import { ConnectionStatus } from "../types/connection-request";
+const matchesRouter = Router();                          // Express router instance
 
 /**
  * POST /request/send/:status/:toUserId - Send Connection Request
@@ -52,32 +54,36 @@ const matchesRouter = express.Router();                          // Express rout
 matchesRouter.post(
   "/request/send/:status/:toUserId",
   userAuth,
-  async (req, res) => {
+  async (req:AuthenticatedRequest, res:Response) : Promise<void> => {
     try {
       // Extract data from request parameters and authenticated user
-      const fromUserId = req.user._id;        // ID of the user sending the request
-      const toUserId = req.params.toUserId;   // ID of the user receiving the request
-      const status = req.params.status;       // Action: "like" or "pass"
-
+      const fromUserId = req.user?._id;        // ID of the user sending the request
+      const toUserId = req.params?.toUserId;   // ID of the user receiving the request
+      const status = req.params?.status;       // Action: "like" or "pass"
+      if (!fromUserId) {
+        res.status(401).json({ message: "Unauthorized access" });
+        return;
+      }
       // Step 1: Validate the status parameter
       // Only "like" and "pass" are allowed for initial requests
-      const allowedStatus = ["like", "pass"];
-      if (!allowedStatus.includes(status)) {
+      const allowedStatus:Array<"like"|"pass"> = ["like", "pass"];
+      if (!allowedStatus.includes(status as "like" | "pass")) {
         throw new Error("Invalid status. Only 'like' or 'pass' are allowed");
       }
 
       // Step 2: Verify the target user exists in the database
       const findToUserId = await User.findById(toUserId);
       if (!findToUserId) {
-        return res.status(404).json({ 
+         res.status(404).json({ 
           message: "User not found",
           error: "USER_NOT_FOUND"
         });
+        return;
       }
 
       // Step 3: Check for existing connection requests to prevent duplicates
       // This prevents users from sending multiple requests to the same person
-      const existingRequest = await ConnectionRequest.findOne({
+      const existingRequest = await ConnectionRequestModel.findOne({
         $or: [
           {
             fromUserId,    // Request from current user to target user
@@ -91,14 +97,15 @@ matchesRouter.post(
       });
       
       if (existingRequest) {
-        return res.status(400).json({ 
+         res.status(400).json({ 
           message: "A connection request already exists between these users",
           error: "DUPLICATE_REQUEST"
         });
+        return;
       }
 
       // Step 4: Create and save the new connection request
-      const connectionRequest = new ConnectionRequest({
+      const connectionRequest = new ConnectionRequestModel({
         fromUserId,    // Who sent the request
         toUserId,      // Who received the request
         status,        // The action taken (like/pass)
@@ -130,7 +137,7 @@ matchesRouter.post(
         }
       });
       
-    } catch (err) {
+    } catch (err:any) {
       console.error("❌ Send connection request error:", err.message);
       res.status(400).json({
         message: "Failed to send connection request",
@@ -168,7 +175,7 @@ matchesRouter.post(
 matchesRouter.post(
   "/request/review/:status/:requestId",
   userAuth,
-  async (req, res) => {
+  async (req:AuthenticatedRequest, res:Response):Promise<void> => {
     try {
       // Extract data from request parameters and authenticated user
       const loggedUser = req.user;                    // The user reviewing the request
@@ -176,17 +183,18 @@ matchesRouter.post(
 
       // Step 1: Validate the response status
       // Only "accept" and "reject" are allowed for reviewing requests
-      const isAllowedStatus = ["accept", "reject"];
-      if (!isAllowedStatus.includes(status)) {
-        return res.status(400).json({ 
+      const isAllowedStatus : Array<"accept"|"reject"> = ["accept", "reject"];
+      if (!isAllowedStatus.includes(status as "accept" | "reject")) {
+         res.status(400).json({ 
           message: "Invalid status. Only 'accept' or 'reject' are allowed",
           error: "INVALID_STATUS"
         });
+        return;
       }
 
       // Step 2: Find the connection request to review
       // Multiple conditions must be met:
-      const connectionRequest = await ConnectionRequest.findOne({
+      const connectionRequest = await ConnectionRequestModel.findOne({
         _id: requestId,                    // Request ID must match
         toUserId: loggedUser._id,          // Request must be sent TO the logged-in user
         status: "like",                    // Request must have "like" status (pending)
@@ -194,19 +202,29 @@ matchesRouter.post(
 
       // Step 3: Verify the connection request exists and belongs to the user
       if (!connectionRequest) {
-        return res.status(400).json({ 
+         res.status(400).json({ 
           message: "Connection request not found or you are not authorized to review it",
           error: "REQUEST_NOT_FOUND"
         });
+        return
       }
 
       // Step 4: Get the sender's information for the response message
       const fromUser = await User.findById(connectionRequest.fromUserId).select(
         "firstName lastName"
       );
-
+      if (!fromUser) {
+        res.status(404).json({
+          message: "Sender not found",
+          error: "SENDER_NOT_FOUND",
+        });
+        return;
+      }
+      
       // Step 5: Update the connection request status
-      connectionRequest.status = status;  // Change from "like" to "accept" or "reject"
+      connectionRequest.status = status === "accept"
+      ? ConnectionStatus.Accept
+      : ConnectionStatus.Reject;  // Change from "like" to "accept" or "reject"
       
       // Step 6: Save the updated request
       const data = await connectionRequest.save();
@@ -227,7 +245,7 @@ matchesRouter.post(
         }
       });
       
-    } catch (err) {
+    } catch (err:any) {
       console.error("❌ Review connection request error:", err.message);
       res.status(400).json({
         message: "Failed to review connection request",
@@ -238,7 +256,7 @@ matchesRouter.post(
 );
 
 // Export the router for use in the main application
-module.exports = matchesRouter;
+export {matchesRouter};
 
 /**
  * MATCHING SYSTEM OVERVIEW:

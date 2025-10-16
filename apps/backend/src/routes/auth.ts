@@ -269,7 +269,7 @@ authRouter.post("/logout", async (req, res:Response) => {
 });
 
 // Export the router for use in the main application
-export default authRouter;
+export {authRouter};
 
 /**
  * SECURITY CONSIDERATIONS:

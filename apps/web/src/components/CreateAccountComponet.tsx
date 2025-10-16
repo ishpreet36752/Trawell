@@ -7,22 +7,25 @@ import { useDispatch } from "react-redux";
 import { addUser } from "../utils/userSlice";
 import { useNavigate } from "react-router";
 import { BASE_URL } from "../utils/contants";
-
-const CreateAccountComponent = ({ onClose }) => {
-  const [emailId, setEmailId] = useState("");
-  const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [error, setError] = useState("");
-  const modalRef = useRef();
-  const dispatch = useDispatch();
+import type { AppDispatch } from "../utils/appStore";
+interface CreateAccountComponentProps {
+  onClose: () => void;
+} 
+const CreateAccountComponent:React.FC<CreateAccountComponentProps> = ({ onClose }) => {
+  const [emailId, setEmailId] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const modalRef = useRef<HTMLDivElement>(null!);
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
   const [signUpToggle, setSignUpToggle] = useState(false);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
+    const handleClickOutside = (event:MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
         onClose();
       }
     };
@@ -33,7 +36,7 @@ const CreateAccountComponent = ({ onClose }) => {
     };
   }, [onClose]);
 
-  const handleLogin = async () => {
+  const handleLogin = async ():Promise<void> => {
     try {
       const res = await axios.post(
         `${BASE_URL}/login`,
@@ -46,12 +49,12 @@ const CreateAccountComponent = ({ onClose }) => {
       // console.log(res.data);
       dispatch(addUser(res.data));
       return navigate("/feed");
-    } catch (err) {
+    } catch (err:any) {
       setError(err?.response?.data);
     }
   };
 
-  const handleSignup = async () => {
+  const handleSignup = async ():Promise<void> => {
     try {
       const res = await axios.post(
         `${BASE_URL}/signup`,
@@ -61,7 +64,7 @@ const CreateAccountComponent = ({ onClose }) => {
       // console.log(res.data);
       dispatch(addUser(res.data.data));
       return navigate("/profile")
-    } catch (err) {
+    } catch (err:any) {
       setError(err?.response?.data);
     }
   };

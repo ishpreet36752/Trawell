@@ -7,8 +7,8 @@ import Feed from "./components/Feed";
 import Profile from "./components/Profile";
 import Connections from "./components/Connections";
 import Requests from "./components/Requests";
-
-const App = () => (
+import {FC} from "react";
+const App:FC = () => (
   <Provider store={appStore}>
     <BrowserRouter>
       <Routes>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, VoidFunctionComponent } from "react";
 import { Camera, X, Plus, ChevronDown, Search } from "lucide-react";
 import { EditCard, CardContent } from "./ui/UpdateCard";
 import Card from "./Card";
@@ -11,32 +11,45 @@ import {
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { addUser } from "../utils/userSlice";
+import {User} from "../types/user"
+import type { AppDispatch } from "../utils/appStore";
+import { EditProfileFormData } from "../types/forms";
+interface EditProfileProp{
+  user:Pick<User, "firstName" | "lastName" | "age" | "gender" | "about" | "image">;
+}
+interface SelectionModalProps {
+  title: string;
+  show: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}
 
-const EditProfile = ({ user }) => {
+const EditProfile:React.FC<EditProfileProp> = ({ user }) => {
   const { firstName, lastName, image, age, gender, about } = user;
   // isPreview === true means "Preview" mode is active
-  const [isPreview, setIsPreview] = useState(false);
+  const [isPreview, setIsPreview] = useState<boolean>(false);
 
   // Initial form data state
-  const [formData, setFormData] = useState({
-    firstName: firstName,
-    lastName: lastName,
-    age: age || "",
-    introduction: about || "",
-    gender: gender || "",
-    instagramUsername: "",
-    tiktokUsername: "",
-    nationality: "Canada",
-    languages: ["English"],
-    interests: ["Adventure", "Beach", "Camping"],
-    visitedPlaces: ["Canada"],
-  });
+    const [formData, setFormData] = useState<EditProfileFormData>({
+      firstName,
+      lastName,
+      age: age || "",
+      introduction: about || "",
+      gender: gender || "",
+      instagramUsername: "",
+      tiktokUsername: "",
+      nationality: "Canada",
+      languages: ["English"],
+      interests: ["Adventure", "Beach", "Camping"],
+      visitedPlaces: ["Canada"],
+    });
 
-  const [error, setError] = useState("");
-  const [showToast , setShowToast] = useState(false)
-  const dispatch = useDispatch();
 
-  const saveProfile = async () => {
+  const [error, setError] = useState<string>("");
+  const [showToast , setShowToast] = useState<boolean>(false)
+  const dispatch = useDispatch<AppDispatch>();
+
+  const saveProfile = async ():Promise<void> => {
     setError("");
     try {
       const res = await axios.patch(
@@ -61,7 +74,7 @@ const EditProfile = ({ user }) => {
       setTimeout(() => {
         setShowToast(false);
       }, 3000);
-    } catch (err) {
+    } catch (err:any) {
       const errorMessage = err.response?.data || "Failed to save profile. Please try again.";
       setError(errorMessage);
       setTimeout(() => {
@@ -72,20 +85,24 @@ const EditProfile = ({ user }) => {
   };
 
   // Modal states
-  const [showLanguageModal, setShowLanguageModal] = useState(false);
-  const [showInterestsModal, setShowInterestsModal] = useState(false);
-  const [showPlacesModal, setShowPlacesModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [showLanguageModal, setShowLanguageModal] = useState<boolean>(false);
+  const [showInterestsModal, setShowInterestsModal] = useState<boolean>(false);
+  const [showPlacesModal, setShowPlacesModal] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   // Profile image state
-  const [profileImages, setProfileImages] = useState({
-    main: image,
-    second: null,
-    third: null,
-  });
+    const [profileImages, setProfileImages] = useState<{
+      main?: string ;
+      second: string | null;
+      third: string | null;
+    }>({
+      main: image ,
+      second:null,
+      third:null
+    });
 
-  const handleImageUpload = (slot, e) => {
-    const file = e.target.files[0];
+  const handleImageUpload = (slot:string, e: React.ChangeEvent<HTMLInputElement>):void => {
+    const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -99,7 +116,7 @@ const EditProfile = ({ user }) => {
   };
 
   // Selection handlers
-  const toggleLanguage = (language) => {
+  const toggleLanguage = (language:string):void => {
     setFormData((prev) => ({
       ...prev,
       languages: prev.languages.includes(language)
@@ -108,7 +125,7 @@ const EditProfile = ({ user }) => {
     }));
   };
 
-  const toggleInterest = (interest) => {
+  const toggleInterest = (interest:{name:string}):void => {
     setFormData((prev) => ({
       ...prev,
       interests: prev.interests.includes(interest.name)
@@ -117,7 +134,7 @@ const EditProfile = ({ user }) => {
     }));
   };
 
-  const togglePlace = (country) => {
+  const togglePlace = (country:{name:string}) => {
     setFormData((prev) => ({
       ...prev,
       visitedPlaces: prev.visitedPlaces.includes(country.name)
@@ -127,7 +144,7 @@ const EditProfile = ({ user }) => {
   };
 
   // Selection Modal Component
-  const SelectionModal = ({ title, show, onClose, children }) => {
+  const SelectionModal:React.FC<SelectionModalProps> = ({ title, show, onClose, children }) => {
     if (!show) return null;
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -210,7 +227,7 @@ const EditProfile = ({ user }) => {
                 age: formData.age,
                 gender: formData.gender, // Adjust if gender becomes editable
                 about: formData.introduction, // or change key to 'about' in formData
-                image: profileImages.main,
+                image: profileImages.main??"",
               }}
             />
           </div>

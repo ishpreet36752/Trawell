@@ -8,7 +8,7 @@
  * NOT hardcoded in the source code. This prevents credential exposure in version control.
  */
 
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 /**
  * Connect to MongoDB Database
@@ -25,7 +25,7 @@ const mongoose = require("mongoose");
  *   .then(() => console.log("Connected to MongoDB"))
  *   .catch(err => console.error("Connection failed:", err));
  */
-const connectDB = async () => {
+const connectDB = async ():Promise<void> => {
     try {
         // Get database connection string from environment variables
         // NEVER hardcode credentials in source code!
@@ -38,9 +38,13 @@ const connectDB = async () => {
         // Connect to MongoDB with connection options
         await mongoose.connect(connectionString, {
             // These options are recommended for production applications
-            useNewUrlParser: true,        // Use new URL parser (deprecated but safe to keep)
-            useUnifiedTopology: true,    // Use new server discovery and monitoring engine
             
+            // **************************************************
+            //removed options that are no longer necessary in Mongoose 6+
+            // useNewUrlParser: true,        // Use new URL parser (deprecated but safe to keep)
+            // useUnifiedTopology: true,    // Use new server discovery and monitoring engine
+            // **************************************************
+
             // Connection timeout settings
             serverSelectionTimeoutMS: 5000, // Timeout for server selection
             socketTimeoutMS: 45000,         // Timeout for socket operations
@@ -76,14 +80,14 @@ const connectDB = async () => {
             process.exit(0);
         });
         
-    } catch (error) {
+    } catch (error:any) {
         console.error("❌ Failed to connect to MongoDB:", error.message);
         throw error; // Re-throw the error so the calling code can handle it
     }
 };
 
 // Export the connection function
-module.exports = connectDB;
+export default connectDB;
 
 /**
  * SECURITY SETUP REQUIRED:

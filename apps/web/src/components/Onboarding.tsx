@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Onboarding = () => {
+const Onboarding:React.FC = () => {
   return (
     <div>Onboarding</div>
   )

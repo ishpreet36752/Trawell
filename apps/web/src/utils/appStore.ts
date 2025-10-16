@@ -11,5 +11,7 @@ const appStore = configureStore({
     requests : requestReducer,
   },
 });
-
+// Infer the RootState and AppDispatch types from the store itself
+export type RootState = ReturnType<typeof appStore.getState>;
+export type AppDispatch = typeof appStore.dispatch;
 export default appStore;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const MainBackground = () => {
+const MainBackground:React.FC = () => {
   const images = [
     'src/assets/images/0.jpeg',
     'src/assets/images/1.jpg',

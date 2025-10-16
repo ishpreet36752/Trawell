@@ -1,9 +1,11 @@
 import React from 'react'
 import { Handshake ,UsersRound , HandHeart } from 'lucide-react';
 import { Link } from 'react-router';
+interface sideBarProps{
+    isOpen:boolean
+}
 
-
-const Sidebar = ({isOpen}) => {
+const Sidebar:React.FC<sideBarProps> = ({isOpen}) => {
 
     const navigationItems = [
        {icon : Handshake , label : "Connections" ,path:"/connections"},

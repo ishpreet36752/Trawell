@@ -59,13 +59,13 @@ app.use(cookieParser());                     // Parse cookies from request heade
 
 
 // @ts-ignore
-import authRouter from "./routes/auth";      // Authentication routes (login, signup, logout)
+import {authRouter} from "./routes/auth";      // Authentication routes (login, signup, logout)
 // @ts-ignore
-import userRouter from "./routes/user";      // User profile management routes
+import {userRouter} from "./routes/user";      // User profile management routes
 // @ts-ignore
-import matchesRouter from "./routes/matches";// Travel matching and companion finding
+import {matchesRouter} from "./routes/matches";// Travel matching and companion finding
 // @ts-ignore
-import groupRouter from "./routes/groups";   // Group creation and management
+import {groupRouter} from "./routes/groups";   // Group creation and management
 
 // Mount routes on the main application
 // All routes from these modules will be accessible from the root path "/"

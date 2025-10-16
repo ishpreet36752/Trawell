@@ -4,12 +4,13 @@ import { BASE_URL } from "../utils/contants";
 import { useDispatch, useSelector } from "react-redux";
 import { addConnection } from "../utils/connectionsSlice";
 import  CardDemo  from "./ConnectionCard";
+import type { AppDispatch,RootState } from "../utils/appStore";
+import { Connection } from "../types/connection";
+const Connections:React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const connections = useSelector((store:RootState) => store.connections);
 
-const Connections = () => {
-  const dispatch = useDispatch();
-  const connections = useSelector((store) => store.connections);
-
-  const fetchConnection = async () => {
+  const fetchConnection = async ():Promise<void> => {
     try {
       const res = await axios.get(`${BASE_URL}/user/connections`, {
         withCredentials: true,
@@ -33,7 +34,7 @@ const Connections = () => {
     <div className="text-center">
       <h1 className="text-black text-3xl font-bold">Connections</h1>
       <div className="grid grid-cols-4 gap-6 mt-3">
-        {connections.map((connection) => (
+        {connections.map((connection:Connection) => (
           <div key={connection._id} className="">
             <CardDemo connection={connection} />
           </div>

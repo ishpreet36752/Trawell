@@ -1,9 +1,11 @@
 import React from "react";
 import EditProfile from "./EditProfile";
 import { useSelector } from "react-redux";
+import type { RootState } from "../utils/appStore";
+import type { User } from "../types/user";
 
 const Profile = () => {
-  const user = useSelector((store) => store.user);
+  const user = useSelector<RootState , User | null>((store:RootState) => store.user);
   
   console.log("Profile component - User data:", user);
   

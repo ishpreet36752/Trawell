@@ -6,17 +6,21 @@ import { Heart, X } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { removeFeedCard } from "../utils/feedSlice";
 import { useLocation } from "react-router";
-
-const Card = ({ user }) => {
+import { User } from "../types/user";
+interface CardProps{
+  user:Partial<User>;
+}
+const Card:React.FC<CardProps> = ({ user }) => {
   if (!user) {
     return null;
   }
 
   const location = useLocation();
-  const { _id, firstName, lastName, image, about, age, gender } = user;
+  const { _id, firstName = "", lastName = "", image = "", age = "", gender = "", about = "" } = user;
+
 
   
-  const capitalize = (str) => {
+  const capitalize = (str:string) => {
     if (typeof str !== 'string' || !str) {
       return '';  // Return an empty string or handle the case as needed
     }
@@ -26,7 +30,7 @@ const Card = ({ user }) => {
   const dispatch = useDispatch();
 
   const sendRequest = useCallback(
-    async (status, userId) => {
+    async (status:string, userId:string) => {
       try {
         // console.log(`Sending ${status} request for user ID: ${userId}`);
         const res = await axios.post(
@@ -40,7 +44,7 @@ const Card = ({ user }) => {
           // console.log(`Dispatching removeFeedCard for user ID: ${userId}`);
           dispatch(removeFeedCard(userId));
         }
-      } catch (err) {
+      } catch (err:any) {
         console.error("API Error:", err.response?.data || err.message);
       }
     },
@@ -86,7 +90,7 @@ const Card = ({ user }) => {
               >
                 <button
                   className="flex gap-1"
-                  onClick={() => sendRequest("like", _id)}
+                  onClick={() => sendRequest("like", _id??"")}
                 >
                   <Heart className="" />
                   Like
@@ -99,7 +103,7 @@ const Card = ({ user }) => {
               >
                 <button
                   className="flex gap-1"
-                  onClick={() => sendRequest("pass", _id)}
+                  onClick={() => sendRequest("pass", _id??"")}
                 >
                   <X />
                   Pass

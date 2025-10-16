@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import CreateAccountComponent from "./CreateAccountComponet";
 
-const CreateAccount = () => {
+const CreateAccount:React.FC = () => {
     const [isOpen , setIsOpen] = useState(false);
 
   return (

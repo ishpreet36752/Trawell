@@ -10,23 +10,23 @@ import axios from "axios";
 import { BASE_URL } from "../utils/contants";
 import { addUser } from "../utils/userSlice";
 import Sidebar from "./Sidebar";
-
+import type { AppDispatch , RootState} from "../utils/appStore";
 const Body = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dispatch = useDispatch();
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const user = useSelector((store) => store.user);
+  const user = useSelector<RootState>((store) => store.user);
   const location = useLocation();
 
   // Fetch user data only if not available
-  const fetchUser = async () => {
+  const fetchUser = async ():Promise<void> => {
     if (user) return; // Prevents unnecessary API calls if user is already loaded
     try {
       const res = await axios.get(`${BASE_URL}/user/1`, {
         withCredentials: true,
       });
       dispatch(addUser(res.data));
-    } catch (err) {
+    } catch (err:any) {
       if (err.response?.status === 401) navigate("/");
       console.error(err);
     }
