@@ -1,7 +1,18 @@
 {
     "name": "trawell-monorepo",
     "private": true,
-    "topics": ["hacktoberfest", "hacktoberfest2025", "travel", "react", "nodejs", "mongodb", "fullstack", "open-source", "beginner-friendly", "good-first-issue"],
+    "topics": [
+        "hacktoberfest",
+        "hacktoberfest2025",
+        "travel",
+        "react",
+        "nodejs",
+        "mongodb",
+        "fullstack",
+        "open-source",
+        "beginner-friendly",
+        "good-first-issue"
+    ],
     "workspaces": [
         "apps/*",
         "packages/*"
@@ -13,6 +24,7 @@
         "dev:fast": "concurrently --names \"web,backend\" --prefix-colors \"blue,green\" \"npm run dev:web\" \"npm run dev:backend\""
     },
     "devDependencies": {
+        "@types/bcrypt": "^6.0.0",
         "concurrently": "^9.2.1"
     }
 }

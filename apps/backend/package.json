@@ -4,8 +4,9 @@
   "description": "complete backend",
   "main": "index.js",
   "scripts": {
-    "start": "node src/app.js",
-    "dev": "nodemon src/app.js"
+    "build":"tsc",
+    "start": "node dist/app.js",
+    "dev": "nodemon --exec ts-node src/app.ts"
   },
   "keywords": [
     "backend",
@@ -26,5 +27,15 @@
     "nodemon": "^3.1.7",
     "npm": "^11.1.0",
     "validator": "^13.12.0"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.9",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.7.2",
+    "@types/validator": "^13.15.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }
