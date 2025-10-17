@@ -45,8 +45,12 @@ app.options('*', cors());
  * These middleware functions process requests before they reach the route handlers.
  * Order matters - middleware is executed in the order they're added.
  */
-app.use(express.json());                     // Parse JSON request bodies
+app.use(express.json({limit:"16kb"}));                     // Parse JSON request bodies
+app.use(express.urlencoded({ extended: true ,limit:"16kb"}));  // for  form-urlencoded
+app.use(express.static("public"))  // '/public',
 app.use(cookieParser());                     // Parse cookies from request headers
+
+
 
 /**
  * Route Registration
@@ -54,14 +58,12 @@ app.use(cookieParser());                     // Parse cookies from request heade
  * Import and register different route modules. Each route file handles
  * a specific feature area of the application.
  */
-const authRouter = require("./routes/auth");       // Authentication routes (login, signup, logout)
 const userRouter = require("./routes/user");       // User profile management routes
 const matchesRouter = require("./routes/matches"); // Travel matching and companion finding
 const groupRouter = require("./routes/groups");    // Group creation and management
 
 // Mount routes on the main application
 // All routes from these modules will be accessible from the root path "/"
-app.use("/", authRouter);      // e.g., POST /signup, POST /login, POST /logout
 app.use("/", userRouter);      // e.g., GET /profile, PUT /profile
 app.use("/", matchesRouter);   // e.g., GET /matches, POST /matches
 app.use("/", groupRouter);     // e.g., GET /groups, POST /groups

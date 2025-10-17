@@ -64,3 +64,5 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+# Ignore everything inside profileImages
+profileImages/*

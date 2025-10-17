@@ -95,7 +95,7 @@ const userSchema = new mongoose.Schema(
     },
     
     // User's profile picture URL
-    image: {
+    profileImage: {
       type: String,
       default: "https://www.iibsonline.com/public/testimonial/testimonial_image_full/183.png", // Default avatar
       validate: {
@@ -110,6 +110,9 @@ const userSchema = new mongoose.Schema(
       type: String,
       maxLength: [300, "About section cannot exceed 300 characters"],
       trim: true, // Remove whitespace
+    },
+    token:{
+      type:String,
     }
   },
   {
@@ -171,12 +174,11 @@ userSchema.methods.getJWT = async function () {
   
   try {
     // Create JWT token with user ID as payload
-    const token = await jwt.sign(
+    const token =  jwt.sign(
       { _id: user._id },           // Payload (data to encode in token)
-      "Trawell@123$",              // Secret key (should be in environment variables)
+      process.env.JWT_SECRET,              // Secret key (should be in environment variables)
       { expiresIn: "7d" }          // Token expiration (7 days)
     );
-    
     return token;
   } catch (error) {
     console.error("❌ JWT generation failed:", error);
@@ -247,3 +249,4 @@ module.exports = mongoose.model("User", userSchema);
  * 5. 🔒 Implement account lockout after failed attempts
  * 6. 🔒 Add audit logging for security events
  */
+  
