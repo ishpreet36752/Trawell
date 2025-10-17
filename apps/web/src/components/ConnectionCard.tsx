@@ -1,10 +1,26 @@
 import React from "react";
 import { cn } from "../utils/utils";
 
-const CardDemo = ({ connection }) => {
+// Interfaces
+interface Connection {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  age: number;
+  gender: string;
+  image: string;
+  about: string;
+}
+
+interface CardDemoProps {
+  connection: Connection;
+}
+
+const CardDemo: React.FC<CardDemoProps> = ({ connection }) => {
   const { _id, firstName, lastName, age, gender, image, about } = connection;
 
-  const capitalize = (str) => (str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "");
+  const capitalize = (str: string): string => 
+    str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
 
   return (
     <div className="min-w-xs w-full group/card">

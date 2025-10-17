@@ -1,37 +1,58 @@
 import React from "react";
-import { Earth } from "lucide-react";
-import { useSelector } from "react-redux";
+import { Earth, AlignJustify } from "lucide-react";
+import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
-import { AlignJustify } from "lucide-react";
+import axios, { AxiosError } from "axios";
 import { BASE_URL } from "../utils/contants";
 import { removeUser } from "../utils/userSlice";
-import { useDispatch } from "react-redux";
 
-const Header = ({ toggleSidebar }) => {
-  const user = useSelector((store) => store.user);
+// Interfaces
+interface User {
+  firstName: string;
+  lastName: string;
+  image: string;
+  email?: string;
+  id?: string;
+}
+
+interface RootState {
+  user: User | null;
+}
+
+interface HeaderProps {
+  toggleSidebar: () => void;
+}
+
+interface LogoutResponse {
+  message?: string;
+  success?: boolean;
+}
+
+const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
+  const user = useSelector((store: RootState) => store.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const logoutUser = async () => {
+  const logoutUser = async (): Promise<void> => {
     try {
-      const res = await axios.post(
+      const res = await axios.post<LogoutResponse>(
         `${BASE_URL}/logout`,
         {},
         { withCredentials: true }
       );
       console.log(res.data);
-      dispatch(removeUser());
+      dispatch(removeUser(null));
       navigate("/");
     } catch (err) {
-      console.log(err);
+      const error = err as AxiosError;
+      console.error("Logout error:", error.message);
     }
   };
 
   return (
     <>
-      <div className="navbar sticky mt-4 px-5 text-black  top-0 z-50">
+      <div className="navbar sticky mt-4 px-5 text-black top-0 z-50">
         <div className="flex-1">
           {user ? (
             <>
@@ -55,7 +76,7 @@ const Header = ({ toggleSidebar }) => {
             </Link>
           )}
           {!user && (
-            <ul className="flex gap-3 ml-2 text-xl font-semibold  cursor-pointer ">
+            <ul className="flex gap-3 ml-2 text-xl font-semibold cursor-pointer">
               <li>
                 <a>Products</a>
               </li>
@@ -83,7 +104,10 @@ const Header = ({ toggleSidebar }) => {
                 className="btn btn-ghost btn-circle avatar"
               >
                 <div className="w-10 rounded-full">
-                  <img alt="Tailwind CSS Navbar component" src={user.image} />
+                  <img
+                    alt={`${user.firstName} ${user.lastName}`}
+                    src={user.image}
+                  />
                 </div>
               </div>
               <ul
