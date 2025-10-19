@@ -21,6 +21,12 @@ const cors = require("cors");                 // Enable Cross-Origin Resource Sh
 // Create Express application instance
 const app = express();
 
+
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 /**
  * CORS (Cross-Origin Resource Sharing) Configuration
  * 
