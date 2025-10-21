@@ -24,14 +24,19 @@ const {userAuth}=require("../middlewares/auth.js")
 const {registerUser,loginUser,getUserProfile,logout, updateUser, updatePassword, updateProfileImage, deleteUserProfile}=require("../controllers/user.controller.js") 
 const {upload}=require("../middlewares/multer.middleware.js");
 
-userRouter.post("/user/register",upload.single("profileImage"),registerUser)
-userRouter.post("/user/login",loginUser)
-userRouter.get("/user/profile/:userId",userAuth, getUserProfile)
-userRouter.post("/user/logout",userAuth, logout)
-userRouter.patch("/user/update-user",userAuth,updateUser)
-userRouter.patch("/user/update/password",userAuth,updatePassword)
-userRouter.patch("/user/update/profile-image",userAuth,upload.single("profileImage"), updateProfileImage)
-userRouter.delete("/user/delete",userAuth,deleteUserProfile)
+userRouter.post("/signup", upload.single("profileImage"), registerUser);
+userRouter.post("/login", loginUser);
+userRouter.get("/user/profile/:userId", userAuth, getUserProfile);
+userRouter.post("/logout", userAuth, logout);
+userRouter.patch("/user/update-user", userAuth, updateUser);
+userRouter.patch("/user/update/password", userAuth, updatePassword);
+userRouter.patch(
+  "/user/update/profile-image",
+  userAuth,
+  upload.single("profileImage"),
+  updateProfileImage
+);
+userRouter.delete("/user/delete", userAuth, deleteUserProfile);
 
 
 // Fields that are safe to return in user feeds (excludes sensitive data)

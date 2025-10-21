@@ -47,7 +47,11 @@ const CreateAccountComponent = ({ onClose }) => {
       dispatch(addUser(res.data));
       return navigate("/feed");
     } catch (err) {
-      setError(err?.response?.data);
+      setError(
+        err?.response?.data?.error ||
+          err?.response?.data?.message ||
+          "An error occurred"
+      );
     }
   };
 
@@ -55,14 +59,26 @@ const CreateAccountComponent = ({ onClose }) => {
     try {
       const res = await axios.post(
         `${BASE_URL}/signup`,
-        { firstName, lastName, emailId, password },
+        {
+          firstName,
+          lastName,
+          emailId,
+          password,
+          age: 25, // Add a default age
+          gender: "male", // Add a default gender
+          about: "I am a new user", // Add a default about
+        },
         { withCredentials: true }
       );
       // console.log(res.data);
       dispatch(addUser(res.data.data));
-      return navigate("/profile")
+      return navigate("/profile");
     } catch (err) {
-      setError(err?.response?.data);
+      setError(
+        err?.response?.data?.error ||
+          err?.response?.data?.message ||
+          "An error occurred"
+      );
     }
   };
 

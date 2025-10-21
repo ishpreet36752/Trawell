@@ -2,47 +2,60 @@ const User=require("../models/user");
 const { uploadOnCloudinary } = require("../utilis/cloudinary");
 
 // register a new user
- async function registerUser(req, res) {
+async function registerUser(req, res) {
 	try {
-		const {firstName,lastName,emailId,password, age , gender, about} = req.body;
-	// check required fields are present or not
-	if(!firstName || !emailId || !password  ){
-		return res.status(400).json({message: "First name, email and password are required"});
-	}
-		// check if user already exists
-		const existingUser = await User.find({emailId: emailId});
-		if(existingUser.length > 0){
-			return res.status(400).json({message: "User already exists with this email"});
+		const { firstName, lastName, emailId, password, age, gender, about } = req.body;
+
+		// check required fields are present or not
+		if (!firstName || !emailId || !password) {
+			return res.status(400).json({ message: "First name, email and password are required" });
 		}
-		const profileImageLocalPath=req.file?.path;
+		// check if user already exists
+		const existingUser = await User.find({ emailId: emailId });
+
+		if (existingUser.length > 0) {
+			return res.status(400).json({ message: "User already exists with this email" });
+		}
+		const profileImageLocalPath = req.file?.path;
+
 		let profileImage;
-		if(profileImageLocalPath){
-			profileImage=await uploadOnCloudinary(profileImageLocalPath)
+
+		if (profileImageLocalPath) {
+			profileImage = await uploadOnCloudinary(profileImageLocalPath);
 		}
 		// create a new user
-		const newUser=await User.create({
+		const userData = {
 			firstName,
 			lastName,
 			emailId,
 			password,
 			age,
 			gender,
-			profileImage : profileImage.url || "",
-			about
-		})
+			about,
+		};
+
+		if (profileImage?.url) {
+			userData.profileImage = profileImage.url;
+		}
+		const newUser = await User.create(userData);
+
 		// generate token
-		const token=await newUser.getJWT();
-		return res.cookie(
-			"token", token, 
-			{
-              httpOnly: true,      // only accessible via HTTP, not JS
-             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-            }).status(201).json({message: "User registered successfully", user:newUser});
+		const token = await newUser.getJWT();
+
+    if (!token) {
+      return res
+        .status(500)
+        .json({ message: "Failed to generate authentication token" });
+    }
+		
+		return res.cookie("token", token, {
+			httpOnly: true, // only accessible via HTTP, not JS
+			maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+		}).status(201).json({ message: "User registered successfully", user: newUser });
 
 	} catch (error) {
-		return res.status(500).json({message: "Server error", error: error.message});
-		
-	}
+		return res.status(500).json({ message: "Server error", error: error.message });
+  }
 }
  
 // login user
