@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const user = require("./user");
 
 const groupSchema = new mongoose.Schema(
   {
@@ -8,6 +7,7 @@ const groupSchema = new mongoose.Schema(
       required: true,
       minLength: 4,
       maxLength: 20,
+      unique:true
     },
     description: {
       type: String,

@@ -21,6 +21,10 @@ groupRouter.post("/group/create", userAuth, async (req, res) => {
     }
     // const loggedUser = req.user;
     // const adminName = loggedUser.firstName;
+    const groupExists=await  Group.find({groupName:groupName})
+    if(groupExists.length>0){
+      return res.status(400).json({message:"Group with this name already exists. Please choose a different name"})
+    }
     const group = new Group({
       groupName,
       description,
