@@ -17,6 +17,8 @@
 
 const jwt = require("jsonwebtoken");  // JWT verification library
 const User = require("../models/user"); // User model for database queries
+const Group=require("../models/group.js")
+
 
 /**
  * User Authentication Middleware
@@ -101,8 +103,69 @@ const userAuth = async (req, res, next) => {
   }
 };
 
+async function groupChatAuth(req,res,next){
+  try {
+    const {groupId}=req.params;
+    
+    const userId=req.user._id.toString();
+    if(!groupId || !userId){
+      return res.status(400).json({message:"Group ID and User ID are required"});
+    }
+const isAuthorized = await Group.findOne({
+  _id: groupId,
+  groupMembers: {
+    $elemMatch: {
+    user: userId,
+    isVerified:true
+}
+  }
+});
+  if(!isAuthorized){
+     return res.status(403).json({message:"You are not authorized  to access this group's chat "})
+  }
+  next();
+
+} catch (error) {
+    return res.status(500).json({message:"Internal Server Error", error:error.message});
+  }
+}
+
+async function socketAuth(socket, next) {
+  try {
+    // ✅ Try all possible token sources
+    const token = socket.request.headers      //postman testing use user token or replace with valid token
+ 
+    if (!token) {
+      return next(new Error("Authentication required"));
+    }
+ 
+    // ✅ Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded?._id || decoded?.id;
+
+    if (!userId) {
+      return next(new Error("Invalid token payload"));
+    }
+
+    // ✅ Fetch user
+    const user = await User.findById(userId).select("-password -token");
+    if (!user) {
+      return next(new Error("User not found"));
+    }
+
+    // ✅ Attach user to socket
+    socket.user = user;
+    next(); // allow connection
+  } catch (error) {
+    next(new Error("Socket authentication failed: " + error.message));
+  }
+}
+
+
+
+
 // Export the middleware function
-module.exports = { userAuth };
+module.exports = { userAuth, groupChatAuth, socketAuth };
 
 /**
  * HOW JWT AUTHENTICATION WORKS:
