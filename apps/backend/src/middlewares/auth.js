@@ -18,6 +18,7 @@
 const jwt = require("jsonwebtoken");  // JWT verification library
 const User = require("../models/user"); // User model for database queries
 const Group=require("../models/group.js")
+const cookie = require("cookie"); 
 
 
 /**
@@ -132,9 +133,12 @@ const isAuthorized = await Group.findOne({
 
 async function socketAuth(socket, next) {
   try {
-    // ✅ Try all possible token sources
-    const token = socket.request.headers      //postman testing use user token or replace with valid token
- 
+     const rawCookie = socket?.request?.headers?.cookie;
+    if (!rawCookie) throw new Error("No cookies sent");
+
+    const parsedCookies = cookie.parse(rawCookie);
+    const token = parsedCookies?.token;
+     console.log("Socket headers:", socket.request.headers.cookie);
     if (!token) {
       return next(new Error("Authentication required"));
     }
