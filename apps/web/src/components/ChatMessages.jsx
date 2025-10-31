@@ -14,13 +14,15 @@ export default function ChatMessages() {
 
   const containerRef = useRef(null);
   const topSentinelRef = useRef(null);
-  const loadingRef = useRef(false); // ✅ prevent double fetch
+  const loadingRef = useRef(false);
 
   const [messages, setMessages] = useState([]);
   const [hasMore, setHasMore] = useState(true);
   const [initialLoaded, setInitialLoaded] = useState(false);
+  const [error, setError] = useState(null);
+  const [unauthorized, setUnauthorized] = useState(false); // ✅ added
 
-  // ✅ Fetch messages (with ?before param)
+  // ✅ Fetch messages
   const fetchMessages = useCallback(async (before = null) => {
     if (!groupId || loadingRef.current) return;
     loadingRef.current = true;
@@ -32,32 +34,39 @@ export default function ChatMessages() {
         withCredentials: true,
       });
       const data = res.data || {};
+      setUnauthorized(false); // ✅ reset if success
       return {
         chunk: Array.isArray(data.messages) ? data.messages : [],
         hasMore: !!data.hasMore,
       };
     } catch (err) {
       console.error("fetchMessages error:", err);
+      if (err.response?.status === 403) {
+        setUnauthorized(true); // ✅ unauthorized
+        return { chunk: [], hasMore: false };
+      }
+      setError(err.message || "Failed to load messages");
       return { chunk: [], hasMore: false };
     } finally {
       loadingRef.current = false;
     }
   }, [groupId]);
 
-  // ✅ Load latest messages initially (not all history)
+  // ✅ Load latest messages initially
   useEffect(() => {
     if (!groupId) return;
     setMessages([]);
     setHasMore(true);
     setInitialLoaded(false);
+    setError(null);
+    setUnauthorized(false);
 
     (async () => {
       const res = await fetchMessages();
       if (!res) return;
-      setMessages(res.chunk.reverse()); // show latest at bottom
+      setMessages(res.chunk.reverse());
       setHasMore(res.hasMore);
 
-      // scroll to bottom
       setTimeout(() => {
         const c = containerRef.current;
         if (c) c.scrollTop = c.scrollHeight;
@@ -66,7 +75,7 @@ export default function ChatMessages() {
     })();
   }, [groupId, fetchMessages]);
 
-  // ✅ Handle incoming socket messages (real-time)
+  // ✅ Handle socket new messages
   useEffect(() => {
     if (!socket || !groupId) return;
     socket.emit("joinGroup", groupId);
@@ -104,7 +113,6 @@ export default function ChatMessages() {
       return;
     }
 
-    // prepend older messages (keep scroll position stable)
     setMessages((prev) => [...res.chunk.reverse(), ...prev]);
 
     setTimeout(() => {
@@ -115,9 +123,9 @@ export default function ChatMessages() {
     setHasMore(res.hasMore);
   }, [hasMore, messages, fetchMessages]);
 
-  // ✅ Observe top for lazy loading old messages
+  // ✅ Observe top for lazy loading
   useEffect(() => {
-    if (!initialLoaded) return;
+    if (!initialLoaded || unauthorized) return;
     const container = containerRef.current;
     const sentinel = topSentinelRef.current;
     if (!container || !sentinel) return;
@@ -133,8 +141,34 @@ export default function ChatMessages() {
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [initialLoaded, loadOlder]);
+  }, [initialLoaded, unauthorized, loadOlder]);
 
+  // ✅ Handle unauthorized view
+  if (unauthorized) {
+    return (
+      <div className="flex items-center justify-center h-[80vh] bg-gray-50">
+        <div className="text-center">
+          <p className="text-xl font-semibold text-gray-700">
+            You are not authorized to read chats.
+          </p>
+          <p className="text-sm text-gray-500 mt-1">
+            Join this group to start chatting.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Handle loading/error
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-[80vh] bg-red-50 text-red-700">
+        Error loading messages: {error}
+      </div>
+    );
+  }
+
+  // ✅ Normal chat UI
   return (
     <div
       ref={containerRef}
@@ -177,3 +211,4 @@ export default function ChatMessages() {
     </div>
   );
 }
+
