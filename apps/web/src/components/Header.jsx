@@ -13,7 +13,6 @@ const Header = ({ toggleSidebar }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-
   const logoutUser = async () => {
     try {
       const res = await axios.post(
@@ -28,7 +27,6 @@ const Header = ({ toggleSidebar }) => {
       console.log(err);
     }
   };
-
   return (
     <>
       <div className="navbar sticky mt-4 px-5 text-black  top-0 z-50">
@@ -83,8 +81,9 @@ const Header = ({ toggleSidebar }) => {
                 className="btn btn-ghost btn-circle avatar"
               >
                 <div className="w-10 rounded-full">
-                  <img alt="Tailwind CSS Navbar component" src={user.image} />
+                  <img alt="Tailwind CSS Navbar component" src={user?.profileImage || user?.user?.profileImage} />
                 </div>
+       
               </div>
               <ul
                 tabIndex={0}

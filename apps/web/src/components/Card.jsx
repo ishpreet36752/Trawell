@@ -13,9 +13,8 @@ const Card = ({ user }) => {
   }
 
   const location = useLocation();
-  const { _id, firstName, lastName, image, about, age, gender } = user;
+  const { _id, firstName, lastName, profileImage, about, age, gender } = user;
 
-  
   const capitalize = (str) => {
     if (typeof str !== 'string' || !str) {
       return '';  // Return an empty string or handle the case as needed
@@ -48,17 +47,17 @@ const Card = ({ user }) => {
   );
 
   const hideButtons = location.pathname === "/profile";
-
   return (
     <div className="flex justify-center items-center max-h-full rounded-xl bg-[#4586ff]">
       <CardContainer>
         <CardBody className="bg-gray-50 border border-gray-300 px-6 pb-80 rounded-lg shadow-lg">
           <CardItem translateZ={100} className="w-full mt-5">
             <img
-              src={image}
+              src={profileImage}
               alt="Floating Card"
               className="h-[24rem] w-full object-cover rounded-lg shadow-lg"
             />
+           
           </CardItem>
           <CardItem
             translateZ={50}
