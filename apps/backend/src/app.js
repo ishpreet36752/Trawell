@@ -39,62 +39,71 @@ const io = new Server(server, {
 
 // ✅ Connected users map
 const connectedUsers = new Map();
-io.use(socketAuth)
+io.use(socketAuth);
+
 io.on("connection", (socket) => {
   console.log(`⚡ User connected: ${socket.user._id}`);
 
-  // Join all group rooms that user is part of
-  socket.on("joinGroups", async () => {
-    const groups = await Group.find({ "groupMembers.user": socket.user._id }).select("_id");
-    groups.forEach(g => socket.join(g._id.toString()));
+  // ✅ User joins a single group room (fixed name)
+  socket.on("joinGroup", async (groupId) => {
+    if (!groupId) return;
+    socket.join(groupId);
+    console.log(`✅ User ${socket.user._id} joined group ${groupId}`);
   });
 
-  // Handle sending a message
+  // ✅ Handle sending a message
   socket.on("sendGroupMessage", async ({ groupId, content }) => {
     try {
       if (!groupId || !content) return;
 
-      // find or create chat record
       let chat = await Chat.findOne({ groupMeta: groupId, type: "group" });
       if (!chat) {
         chat = await Chat.create({
           type: "group",
           createdBy: socket.user._id,
           groupMeta: groupId,
-          participants: [] // optional
         });
       }
-      // create message
+
       const message = await Message.create({
         chatId: chat._id,
         sender: socket.user._id,
         content: content.trim(),
-        messageType: "text"
+        messageType: "text",
       });
 
-      // update last message on chat
       chat.lastMessage = message._id;
       await chat.save();
-      // emit to all group members in that room
+
+      // ✅ Emit with full sender + group info
+      const populatedSender = {
+        _id: socket.user._id,
+        firstName: socket.user.firstName,
+        lastName: socket.user.lastName,
+        profileImage: socket.user.profileImage,
+      };
+
       io.to(groupId).emit("newGroupMessage", {
         _id: message._id,
         chatId: chat._id,
-        sender: socket.user._id,
+        groupId,
+        sender: populatedSender,
         content: message.content,
-        createdAt: message.createdAt
+        createdAt: message.createdAt,
       });
 
+      console.log(`💬 Message sent in group ${groupId}`);
     } catch (err) {
       console.error("Error sending group message:", err.message);
       socket.emit("errorMessage", { error: err.message });
     }
   });
 
-  // Handle user disconnect
   socket.on("disconnect", () => {
     console.log(`❌ User disconnected: ${socket.user._id}`);
   });
 });
+
 
 
 

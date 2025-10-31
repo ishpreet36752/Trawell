@@ -85,7 +85,8 @@ groupRouter.post("/:groupId/join", userAuth, async (req, res) => {
       return res.status(400).json({ message: "Group is full" });
     }
 
-    group.groupMembers.push({ user: req.user._id });
+    group.groupMembers.push({ user: req.user._id,isVerified:true });
+
     await group.save();
 
     return res.status(200).json({
