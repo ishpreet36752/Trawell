@@ -1,49 +1,45 @@
 const Chat = require("../models/chats.js");
 const Message = require("../models/message.js");
-const { paginate } = require("../utilis/pagination.js");
 
 async function getGroupMessage(req, res) {
   try {
     const { groupId } = req.params;
-    const { page = 1, limit = 4 } = req.query; // default: 7 messages per page
+    const { before, limit = 10 } = req.query;
 
-    //  Validate input
     if (!groupId) {
-      return res.status(400).json({ message: "Group ID is required" });
+      return res.status(400).json({ success: false, message: "Group ID required" });
     }
 
-    //  Find chat linked to this group
     const chat = await Chat.findOne({ groupMeta: groupId });
     if (!chat) {
-      return res.status(404).json({ message: "Chat not found" });
+      return res.status(404).json({ success: false, message: "Chat not found" });
     }
 
+    const query = { chatId: chat._id };
+    if (before) {
+      query.createdAt = { $lt: new Date(before) };
+    }
 
-    //  Fetch messages with sender details (latest first)
-   
-    const paginated = await paginate(Message, { chatId: chat._id }, {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      sort: { createdAt: -1 },
-      populate: { path: "sender", select: "firstName lastName profileImage" },
-    });
- //  Reverse for chronological order
-    paginated.results.reverse();
+    const messages = await Message.find(query)
+      .populate("sender", "firstName lastName profileImage")
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit));
 
+    const totalCount = await Message.countDocuments({ chatId: chat._id });
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      currentPage: paginated.currentPage,
-      totalPages: paginated.totalPages,
-      totalMessages:paginated.totalDocuments,
-      messages: paginated.results,
+      messages: messages.reverse(), // chronological order
+      hasMore: messages.length > 0 && messages.length < totalCount,
     });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Server Error",
-      error: error.message,
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
     });
   }
 }
 
 module.exports = { getGroupMessage };
+

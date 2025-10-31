@@ -6,4 +6,4 @@ const { getGroupMessage}=require("../controllers/message.controller.js")
 
 messageRouter.get("/group-chat/:groupId", userAuth, groupChatAuth,getGroupMessage);
 
-module.exports=messageRouter;
+module.exports=messageRouter; 
