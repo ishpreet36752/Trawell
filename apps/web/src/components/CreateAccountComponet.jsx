@@ -85,7 +85,7 @@ const CreateAccountComponent = ({ onClose }) => {
 
   return (
     <motion.div
-      className="fixed inset-0 flex items-center justify-center p-4"
+      className="fixed inset-0 flex items-center justify-center p-4 z-50"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
