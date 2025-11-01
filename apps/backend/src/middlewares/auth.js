@@ -138,7 +138,6 @@ async function socketAuth(socket, next) {
 
     const parsedCookies = cookie.parse(rawCookie);
     const token = parsedCookies?.token;
-     console.log("Socket headers:", socket.request.headers.cookie);
     if (!token) {
       return next(new Error("Authentication required"));
     }
