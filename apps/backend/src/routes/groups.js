@@ -1,6 +1,7 @@
 const express = require("express");
 const { userAuth } = require("../middlewares/auth");
 const Group = require("../models/group.js");
+const group = require("../models/group.js");
 const groupRouter = express.Router();
 
 groupRouter.post("/group/create", userAuth, async (req, res) => {
@@ -98,5 +99,67 @@ groupRouter.post("/:groupId/join", userAuth, async (req, res) => {
       .json({ message: "Error joining group", error: err.message });
   }
 });
+
+groupRouter.get("/group/:groupId", userAuth, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    if(groupId==="undefined"){
+      return res.status(400).json({message:"Group ID is required"})
+    }
+    const group = await Group.findById(groupId)
+    if(!group){
+      return res.status(404).json({message:"Group not found"})
+    }
+    return res.status(200).json({group:group})
+  } catch (error) {
+    return res.status(500).json({message:"Server Error",error:error.message})
+  }
+})
+
+groupRouter.get("/group/:groupId/members", userAuth, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+
+    if (!groupId) {
+      return res.status(400).json({ message: "Group ID is required" });
+    }
+
+    const group = await Group.findById(groupId)
+      .populate("groupMembers.user", "firstName lastName email profileImage");
+
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    const totalMembers = group.groupMembers.length;
+    const totalPages = Math.ceil(totalMembers / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + Number(limit);
+
+    const paginatedMembers = group.groupMembers.slice(startIndex, endIndex);
+
+    const groupMembersDetails = paginatedMembers.map((member) => ({
+      _id: member.user._id,
+      firstName: member.user.firstName,
+      lastName: member.user.lastName,
+      email: member.user.email,
+      profileImage: member.user.profileImage,
+      role: member.role,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      currentPage: Number(page),
+      totalPages,
+      totalMembers,
+      members: groupMembersDetails,
+    });
+  } catch (error) {
+    console.error("Error fetching group members:", error);
+    return res.status(500).json({ message: "Server Error", error: error.message });
+  }
+});
+
 
 module.exports = groupRouter;

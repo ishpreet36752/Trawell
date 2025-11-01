@@ -7,7 +7,7 @@ const Profile = () => {
   
   console.log("Profile component - User data:", user);
   
-  if (!user) {
+  if (!user.user) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-lg">Loading user profile...</div>
@@ -16,7 +16,7 @@ const Profile = () => {
   }
 
   // Check if user has required fields
-  if (!user.firstName || !user.lastName) {
+  if (!user.user.firstName || !user.user.lastName) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-lg text-red-500">

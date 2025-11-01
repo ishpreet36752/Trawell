@@ -23,6 +23,8 @@ const userRouter = express.Router();
 const {userAuth}=require("../middlewares/auth.js")      
 const {registerUser,loginUser,getUserProfile,logout, updateUser, updatePassword, updateProfileImage, deleteUserProfile}=require("../controllers/user.controller.js") 
 const {upload}=require("../middlewares/multer.middleware.js");
+const User = require("../models/user.js");
+const ConnectionRequest = require("../models/connectionRequest.js");
 
 userRouter.post("/signup", upload.single("profileImage"), registerUser);
 userRouter.post("/login", loginUser);
@@ -94,7 +96,7 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
     });
 
     console.log("🚫 Users to hide from feed:", hideUserFromFeed);
-
+    const USER_SAVE_DATA = "firstName lastName emailId profileImage about location";
     // Step 3: Query users for the feed with exclusions and pagination
     const feed = await User.find({
       $and: [
@@ -105,7 +107,6 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
       .select(USER_SAVE_DATA)  // Only return safe, non-sensitive fields
       .skip(skip)              // Skip users for pagination
       .limit(limit);           // Limit results per page
-
     // Step 4: Send the filtered and paginated user feed
     res.status(200).json({
       message: "User feed retrieved successfully",

@@ -13,7 +13,7 @@ import { useDispatch } from "react-redux";
 import { addUser } from "../utils/userSlice";
 
 const EditProfile = ({ user }) => {
-  const { firstName, lastName, image, age, gender, about } = user;
+  const { firstName, lastName, profileImage, age, gender, about } = user.user;
   // isPreview === true means "Preview" mode is active
   const [isPreview, setIsPreview] = useState(false);
 
@@ -47,7 +47,7 @@ const EditProfile = ({ user }) => {
           age: formData.age,
           about: formData.introduction,
           gender: formData.gender,
-          image: image,
+          profileImage: profileImage,
         },
         { 
           withCredentials: true,
@@ -79,7 +79,7 @@ const EditProfile = ({ user }) => {
 
   // Profile image state
   const [profileImages, setProfileImages] = useState({
-    main: image,
+    main: profileImage,
     second: null,
     third: null,
   });

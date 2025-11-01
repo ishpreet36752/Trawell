@@ -17,9 +17,85 @@ const express = require("express");           // Web framework for Node.js
 const cookieParser = require("cookie-parser"); // Parse cookies from request headers
 const connectDB = require("./config/database"); // Database connection function
 const cors = require("cors");                 // Enable Cross-Origin Resource Sharing
-
+const http=require("http");
+const { Server } = require("socket.io");
+const { socketAuth } = require("./middlewares/auth.js");
+const Group = require("./models/group.js");
+const Chat = require("./models/chats.js");
+const Message = require("./models/message.js");
 // Create Express application instance
 const app = express();
+
+// Create HTTP server using the Express app 
+ const server=http.createServer(app);
+// ✅ Socket.IO setup with CORS
+const io = new Server(server, {
+  cors: {
+    origin: process.env.FRONTEND_URL || "http://localhost:5173" || "*",
+    methods: ['GET', 'POST','PUT','DELETE'],
+    credentials: true,
+  },
+});
+
+// ✅ Connected users map
+const connectedUsers = new Map();
+io.use(socketAuth)
+io.on("connection", (socket) => {
+  console.log(`⚡ User connected: ${socket.user._id}`);
+
+  // Join all group rooms that user is part of
+  socket.on("joinGroups", async () => {
+    const groups = await Group.find({ "groupMembers.user": socket.user._id }).select("_id");
+    groups.forEach(g => socket.join(g._id.toString()));
+  });
+
+  // Handle sending a message
+  socket.on("sendGroupMessage", async ({ groupId, content }) => {
+    try {
+      if (!groupId || !content) return;
+
+      // find or create chat record
+      let chat = await Chat.findOne({ groupMeta: groupId, type: "group" });
+      if (!chat) {
+        chat = await Chat.create({
+          type: "group",
+          createdBy: socket.user._id,
+          groupMeta: groupId,
+          participants: [] // optional
+        });
+      }
+      // create message
+      const message = await Message.create({
+        chatId: chat._id,
+        sender: socket.user._id,
+        content: content.trim(),
+        messageType: "text"
+      });
+
+      // update last message on chat
+      chat.lastMessage = message._id;
+      await chat.save();
+      // emit to all group members in that room
+      io.to(groupId).emit("newGroupMessage", {
+        _id: message._id,
+        chatId: chat._id,
+        sender: socket.user._id,
+        content: message.content,
+        createdAt: message.createdAt
+      });
+
+    } catch (err) {
+      console.error("Error sending group message:", err.message);
+      socket.emit("errorMessage", { error: err.message });
+    }
+  });
+
+  // Handle user disconnect
+  socket.on("disconnect", () => {
+    console.log(`❌ User disconnected: ${socket.user._id}`);
+  });
+});
+
 
 
 app.use((req, res, next) => {
@@ -56,6 +132,14 @@ app.use(express.urlencoded({ extended: true ,limit:"16kb"}));  // for  form-urle
 app.use(express.static("public"))  // '/public',
 app.use(cookieParser());                     // Parse cookies from request headers
 
+// Socket.io cookie parser middleware
+io.use((socket, next) => {
+  cookieParser()(socket.request, {}, (err) => {
+    if (err) return next(err);
+    socketAuth(socket, next);
+  });
+});
+
 
 
 /**
@@ -66,13 +150,15 @@ app.use(cookieParser());                     // Parse cookies from request heade
  */
 const userRouter = require("./routes/user");       // User profile management routes
 const matchesRouter = require("./routes/matches"); // Travel matching and companion finding
-const groupRouter = require("./routes/groups");    // Group creation and management
+const groupRouter = require("./routes/groups"); 
+const messageRouter=require("./routes/messages.js");   // Group creation and management
 
 // Mount routes on the main application
 // All routes from these modules will be accessible from the root path "/"
 app.use("/", userRouter);      // e.g., GET /profile, PUT /profile
 app.use("/", matchesRouter);   // e.g., GET /matches, POST /matches
-app.use("/", groupRouter);     // e.g., GET /groups, POST /groups
+app.use("/", groupRouter);   
+app.use("/",messageRouter)  // e.g., GET /groups, POST /groups
 
 /**
  * Database Connection and Server Startup
@@ -89,7 +175,7 @@ connectDB()
     const PORT = process.env.PORT || 7777;
     
     // Start the HTTP server on the configured port
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log("🚀 Server is running on port", PORT);
       console.log("📱 Frontend can connect at:", process.env.FRONTEND_URL || `http://localhost:${PORT}`);
       console.log("🌍 Environment:", process.env.NODE_ENV || "development");
@@ -104,4 +190,4 @@ connectDB()
   });
 
 // Export the app instance for testing purposes
-module.exports = app;
+module.exports = {server,io, connectedUsers, app};

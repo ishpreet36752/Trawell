@@ -43,8 +43,9 @@ const CreateAccountComponent = ({ onClose }) => {
         },
         { withCredentials: true }
       );
-      // console.log(res.data);
-      dispatch(addUser(res.data));
+      console.log( "login data",res.data.user);
+      dispatch(addUser(res.data.user));
+
       return navigate("/feed");
     } catch (err) {
       setError(
@@ -71,7 +72,7 @@ const CreateAccountComponent = ({ onClose }) => {
         { withCredentials: true }
       );
       // console.log(res.data);
-      dispatch(addUser(res.data.data));
+      dispatch(addUser(res.data.user));
       return navigate("/profile");
     } catch (err) {
       setError(
