@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import Header from "./Header";
-import Footer from "./Footer";
-import { Outlet, useLocation } from "react-router";
-import MainBackground from "./MainBackground";
-import CreateAccount from "./CreateAccount";
 import axios from "axios";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Outlet, useLocation } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../utils/contants";
 import { addUser } from "../utils/userSlice";
+import CreateAccount from "./CreateAccount";
+import Footer from "./Footer";
+import Header from "./Header";
+import MainBackground from "./MainBackground";
 import Sidebar from "./Sidebar";
 
 const Body = () => {
@@ -46,7 +46,7 @@ const Body = () => {
     location.pathname === "/feed" || location.pathname === "/profile" || location.pathname === "/connections" || location.pathname === "/requests";
 
   return (
-    <div >
+    <div className="min-h-screen overflow-x-hidden">
       <Header toggleSidebar={toggleSidebar} />
       {!hideBackgroundAndFooter && <MainBackground />}
       {!hideBackgroundAndFooter && <CreateAccount />}
