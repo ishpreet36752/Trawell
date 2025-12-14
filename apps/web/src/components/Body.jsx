@@ -46,17 +46,16 @@ const Body = () => {
     location.pathname === "/feed" || location.pathname === "/profile" || location.pathname === "/connections" || location.pathname === "/requests";
 
   return (
-    <div >
+    <div className="flex flex-col min-h-screen">
       <Header toggleSidebar={toggleSidebar} />
       {!hideBackgroundAndFooter && <MainBackground />}
       {!hideBackgroundAndFooter && <CreateAccount />}
-      <div className="flex w-full">
-  {location.pathname !== "/" && <Sidebar isOpen={isOpen} />}
-  <div className="flex-grow flex justify-center items-center">
-    <Outlet />
-  </div>
-</div>
-
+      <div className="flex w-full flex-grow">
+        {location.pathname !== "/" && <Sidebar isOpen={isOpen} />}
+        <div className="flex-grow flex justify-center items-center">
+          <Outlet />
+        </div>
+      </div>
       {!hideBackgroundAndFooter && <Footer />}
     </div>
   );

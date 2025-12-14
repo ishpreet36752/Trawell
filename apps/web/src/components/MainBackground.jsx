@@ -15,38 +15,38 @@ const MainBackground = () => {
   const repeatedImages = [...images, ...images];
 
   return (
-    <div className="relative -my-32 mx-0 w-screen h-screen overflow-hidden opacity-85 rotate-[-3deg] z-0 mr-[-15px] scrollbar-hide">
-
-      <div className='flex w-full h-full'>
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden opacity-20 -z-10 blur-sm">
+      <div className='flex w-full h-full justify-center items-center gap-4'>
         {
-          [...Array(4)].map((_,colIndex) => (
+          [...Array(4)].map((_, colIndex) => (
             <motion.ul
-            key={colIndex}
-        className="flex flex-col w-[22rem] gap-5 h-[200%]"
-        initial={{ translateY: "0%" }}
-        animate={{ translateY: "-80%" }} // Move halfway as the list is doubled
-        transition={{
-          duration: 10,
-          ease: "linear",
-          repeat: Infinity,
-        }}
-      >
-        {repeatedImages.map((src, index) => (
-          <li key={`${colIndex}-${index}`} className="w-full flex-shrink-0">
-            <div className="w-[20rem] h-[25rem]  mx-auto rounded-xl overflow-hidden">
-              <img
-                src={src}
-                alt={`Image ${colIndex}-${index}`}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </li>
-        ))}
-      </motion.ul>
+              key={colIndex}
+              className="flex flex-col w-[22rem] gap-5"
+              initial={{ translateY: colIndex % 2 === 0 ? "0%" : "-50%" }}
+              animate={{ translateY: colIndex % 2 === 0 ? "-50%" : "0%" }}
+              transition={{
+                duration: 20 + colIndex * 2,
+                ease: "linear",
+                repeat: Infinity,
+                repeatType: "reverse",
+              }}
+            >
+              {repeatedImages.map((src, index) => (
+                <li key={`${colIndex}-${index}`} className="w-full flex-shrink-0">
+                  <div className="w-[20rem] h-[25rem] mx-auto rounded-xl overflow-hidden shadow-lg">
+                    <img
+                      src={src}
+                      alt={`Travel ${colIndex}-${index}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </li>
+              ))}
+            </motion.ul>
           ))
         }
-      
-    </div></div>
+      </div>
+    </div>
   );
 };
 

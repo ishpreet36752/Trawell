@@ -2,11 +2,7 @@ import React from 'react';
 
 const Footer = () => {
   return (
-    <div className="flex flex-col min-h-screen ">
-      <div className="flex-grow">
-        {/* Main content area */}
-      </div>
-      <div className=''>
+    <div className="relative bg-white/80 backdrop-blur-md mt-auto">
       <footer className="footer text-base-content p-10">
         <nav>
           <h6 className="footer-title">Services</h6>
@@ -88,7 +84,6 @@ const Footer = () => {
           </div>
         </nav>
       </footer>
-      </div>
     </div>
   );
 };
